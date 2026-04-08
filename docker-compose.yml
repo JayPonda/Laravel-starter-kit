@@ -1,0 +1,36 @@
+services:
+    mysql:
+        image: mysql:8.0
+        container_name: ${APP_NAME:-laravel}-mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+            MYSQL_DATABASE: ${DB_DATABASE:-laravel}
+            MYSQL_USER: ${DB_USERNAME:-laravel}
+            MYSQL_PASSWORD: ${DB_PASSWORD:-laravel}
+        ports:
+            - "${DB_PORT:-3311}:3306"
+        volumes:
+            - mysql_data:/var/lib/mysql
+            - ./storage/database.sql:/docker-entrypoint-initdb.d/init.sql:ro
+        networks:
+            - laravel
+
+    redis:
+        image: redis:7-alpine
+        container_name: ${APP_NAME:-laravel}-redis
+        command: redis-server /usr/local/etc/redis/redis.conf
+        ports:
+            - "${REDIS_PORT:-6379}:6379"
+        volumes:
+            - redis_data:/data
+            - ./storage/redis.conf:/usr/local/etc/redis/redis.conf:ro
+        networks:
+            - laravel
+
+volumes:
+    mysql_data:
+    redis_data:
+
+networks:
+    laravel:
+        driver: bridge
