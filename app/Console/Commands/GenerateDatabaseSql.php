@@ -14,10 +14,11 @@ class GenerateDatabaseSql extends Command
     public function handle(): int
     {
         $connection = config('database.default');
-        
+
         if ($connection !== 'mysql' && $connection !== 'mariadb') {
             $this->error('This command only supports MySQL/MariaDB connections.');
-            $this->info('Current connection: ' . $connection);
+            $this->info('Current connection: '.$connection);
+
             return Command::FAILURE;
         }
 
@@ -28,6 +29,7 @@ class GenerateDatabaseSql extends Command
 
         if (! $dbName || ! $dbUser) {
             $this->error('Please configure DB_DATABASE and DB_USERNAME in .env');
+
             return Command::FAILURE;
         }
 
@@ -43,7 +45,7 @@ SQL;
         $path = base_path('storage/database.sql');
         File::put($path, $sql);
 
-        $this->info("SQL file generated at: storage/database.sql");
+        $this->info('SQL file generated at: storage/database.sql');
         $this->info("Database: {$dbName}");
         $this->info("User: {$dbUser}");
         $this->info("Host: {$dbHost}");

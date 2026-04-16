@@ -2,10 +2,11 @@
 
 namespace Tests\Unit;
 
-use App\Services\UserService;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class UserServiceTest extends TestCase
@@ -56,7 +57,7 @@ class UserServiceTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $this->expectException(ValidationException::class);
         $this->userService->login($user->email, 'wrongpassword');
     }
 

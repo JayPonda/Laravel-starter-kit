@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -16,7 +17,7 @@ class CreateUserCommandTest extends TestCase
             $mock->shouldReceive('createUser')
                 ->with('John Doe', 'john@example.com')
                 ->andReturn([
-                    'user' => new \App\Models\User(['name' => 'John Doe', 'email' => 'john@example.com']),
+                    'user' => new User(['name' => 'John Doe', 'email' => 'john@example.com']),
                     'password' => 'temppassword123',
                 ]);
         });

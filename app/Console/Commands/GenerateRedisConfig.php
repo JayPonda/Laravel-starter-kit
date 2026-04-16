@@ -72,12 +72,12 @@ CONF;
         $path = base_path('storage/redis.conf');
         File::put($path, $config);
 
-        $this->info("Redis config generated at: storage/redis.conf");
+        $this->info('Redis config generated at: storage/redis.conf');
         $this->info("Host: {$bind}");
         $this->info("Port: {$port}");
-        
+
         if (empty($password)) {
-            $this->warn("WARNING: No REDIS_PASSWORD set in .env - using default. Please set a strong password!");
+            $this->warn('WARNING: No REDIS_PASSWORD set in .env - using default. Please set a strong password!');
         }
 
         return Command::SUCCESS;

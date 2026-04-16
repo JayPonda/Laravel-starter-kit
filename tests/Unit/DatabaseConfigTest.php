@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
 use Illuminate\Support\Facades\Config;
+use Tests\TestCase;
 
 class DatabaseConfigTest extends TestCase
 {

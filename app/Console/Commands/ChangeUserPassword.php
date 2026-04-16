@@ -23,7 +23,7 @@ class ChangeUserPassword extends Command
 
         $result = $this->userService->changePassword($email);
 
-        $this->info("Password changed successfully!");
+        $this->info('Password changed successfully!');
         $this->info("Name: {$result['user']->name}");
         $this->info("Email: {$result['user']->email}");
         $this->info("New Password: {$result['password']}");

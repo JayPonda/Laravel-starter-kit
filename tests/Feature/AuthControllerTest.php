@@ -66,7 +66,7 @@ class AuthControllerTest extends TestCase
         $token = $user->createToken('auth-token')->plainTextToken;
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
         ])->postJson('/api/logout');
 
         $response->assertStatus(200);
@@ -79,7 +79,7 @@ class AuthControllerTest extends TestCase
         $token = $user->createToken('auth-token')->plainTextToken;
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
         ])->getJson('/api/me');
 
         $response->assertStatus(200)

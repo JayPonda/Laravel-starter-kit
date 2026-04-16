@@ -24,7 +24,7 @@ class CreateUser extends Command
 
         $result = $this->userService->createUser($name, $email);
 
-        $this->info("User created successfully!");
+        $this->info('User created successfully!');
         $this->info("Name: {$result['user']->name}");
         $this->info("Email: {$result['user']->email}");
         $this->info("Temporary Password: {$result['password']}");
