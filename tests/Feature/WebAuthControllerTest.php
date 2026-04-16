@@ -35,8 +35,10 @@ class WebAuthControllerTest extends TestCase
             'password_confirmation' => 'password123',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect('/dashboard');
+        $this->assertGuest();
+        $response->assertRedirect('/login');
+        $response->assertSessionHas('success', 'Registration successful! Please login.');
+        $this->assertDatabaseHas('users', ['email' => 'test@example.com']);
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void

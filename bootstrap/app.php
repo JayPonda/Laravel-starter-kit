@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -27,10 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (Throwable $e, $request) {
             if ($request->is('api/*')) {
                 $status = 500;
-                
-                if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+
+                if ($e instanceof HttpExceptionInterface) {
                     $status = $e->getStatusCode();
-                } elseif ($e instanceof \Illuminate\Validation\ValidationException) {
+                } elseif ($e instanceof ValidationException) {
                     $status = 422;
                 } elseif ($e->getCode() >= 400 && $e->getCode() < 600) {
                     // Some custom exceptions might set a valid HTTP code via getCode()
@@ -43,7 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     'status' => $status,
                 ];
 
-                if ($e instanceof \Illuminate\Validation\ValidationException) {
+                if ($e instanceof ValidationException) {
                     $response['errors'] = $e->errors();
                 }
 

@@ -19,4 +19,3 @@ Route::post('logout', [WebAuthController::class, 'logout'])->name('logout')->mid
 Route::get('/dashboard', function () {
     return "<h1>Welcome to the Dashboard</h1><form method='POST' action='".route('logout')."'>".csrf_field()."<button type='submit'>Logout</button></form>";
 })->middleware('auth')->name('dashboard');
-

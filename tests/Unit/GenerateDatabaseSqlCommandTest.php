@@ -6,18 +6,21 @@ use Tests\TestCase;
 
 class GenerateDatabaseSqlCommandTest extends TestCase
 {
-    public function test_generate_database_sql_command(): void
+    public function test_generate_database_sql_script(): void
     {
-        config(['database.default' => 'mysql']);
-        config(['database.connections.mysql.database' => 'testdb']);
-        config(['database.connections.mysql.username' => 'testuser']);
-        config(['database.connections.mysql.password' => 'testpass']);
-        config(['database.connections.mysql.host' => '127.0.0.1']);
+        $sqlPath = base_path('storage/database.sql');
+        if (file_exists($sqlPath)) {
+            unlink($sqlPath);
+        }
 
-        $this->artisan('db:generate-sql')
-            ->expectsOutput('SQL file generated at: storage/database.sql')
-            ->assertExitCode(0);
+        // Run the standalone script
+        exec('php '.base_path('setup/generate-db-sql.php'), $output, $returnVar);
 
-        $this->assertFileExists(storage_path('database.sql'));
+        $this->assertEquals(0, $returnVar);
+        $this->assertFileExists($sqlPath);
+
+        $content = file_get_contents($sqlPath);
+        $this->assertStringContainsString('CREATE DATABASE IF NOT EXISTS', $content);
+        $this->assertStringContainsString('CREATE USER IF NOT EXISTS', $content);
     }
 }

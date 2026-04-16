@@ -32,11 +32,15 @@ dev: ## Start the Vite development server
 install: ## Install composer and npm dependencies
 	composer install && npm install
 
-setup: install ## Initial project setup
+setup: install config ## Initial project setup
 	cp -n .env.example .env || true
 	php artisan key:generate
 	php artisan migrate
 	@echo "Setup complete. Run 'make up' to start services and 'make serve' for the app."
+
+config: ## Generate MySQL and Redis configurations
+	php setup/generate-db-sql.php
+	php setup/generate-redis-conf.php
 
 shell: ## Open a bash shell
 	bash

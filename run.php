@@ -12,7 +12,7 @@ function runCommand($command, $description)
 }
 
 // Parse options
-$options = getopt("i");
+$options = getopt('i');
 $shouldInstall = isset($options['i']);
 
 // We are now inside the template directory
@@ -20,8 +20,8 @@ $templateDir = __DIR__;
 
 // 1. & 2. Generate MySQL and Redis configs
 // These need to run first as Docker depends on them (via volumes)
-runCommand('php artisan db:generate-sql', 'Generating MySQL Config');
-runCommand('php artisan redis:generate-config', 'Generating Redis Config');
+runCommand('php setup/generate-db-sql.php', 'Generating MySQL Config');
+runCommand('php setup/generate-redis-conf.php', 'Generating Redis Config');
 
 // 3. Start Docker
 runCommand('docker compose up -d', 'Starting Docker Containers');
@@ -80,4 +80,4 @@ runCommand('./vendor/bin/pint', 'Running Laravel Pint (Linting)');
 runCommand('php artisan test', 'Running Tests');
 
 // 10. Artisan serve
-runCommand("php artisan serve", "Starting Laravel Development Server on port $port");
+runCommand('php artisan serve', "Starting Laravel Development Server on port $port");
