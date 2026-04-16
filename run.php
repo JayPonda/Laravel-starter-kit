@@ -80,4 +80,4 @@ runCommand('./vendor/bin/pint', 'Running Laravel Pint (Linting)');
 runCommand('php artisan test', 'Running Tests');
 
 // 10. Artisan serve
-runCommand('php artisan serve', 'Starting Laravel Development Server');
+runCommand("php artisan serve", "Starting Laravel Development Server on port $port");

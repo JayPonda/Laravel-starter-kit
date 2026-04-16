@@ -16,5 +16,43 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(preg_split('/,/', env('CORS_ALLOWED_ORIGINS', '')), ['\Illuminate\Http\Middleware\HandleCors']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->shouldRenderJsonWhen(function ($request, $e) {
+            if ($request->is('api/*')) {
+                return true;
+            }
+
+            return $request->expectsJson();
+        });
+
+        $exceptions->render(function (Throwable $e, $request) {
+            if ($request->is('api/*')) {
+                $status = 500;
+                
+                if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                    $status = $e->getStatusCode();
+                } elseif ($e instanceof \Illuminate\Validation\ValidationException) {
+                    $status = 422;
+                } elseif ($e->getCode() >= 400 && $e->getCode() < 600) {
+                    // Some custom exceptions might set a valid HTTP code via getCode()
+                    $status = $e->getCode();
+                }
+
+                $response = [
+                    'message' => $e->getMessage() ?: 'An unexpected error occurred.',
+                    'exception' => get_class($e),
+                    'status' => $status,
+                ];
+
+                if ($e instanceof \Illuminate\Validation\ValidationException) {
+                    $response['errors'] = $e->errors();
+                }
+
+                // In debug mode, you might want to see the stack trace even in JSON
+                if (config('app.debug')) {
+                    $response['trace'] = $e->getTrace();
+                }
+
+                return response()->json($response, $status);
+            }
+        });
     })->create();
