@@ -41,6 +41,8 @@
         "setup": [
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php setup/generate-db-sql.php",
+            "@php setup/generate-redis-conf.php",
             "@php artisan key:generate",
             "@php artisan migrate --force",
             "npm install --ignore-scripts",

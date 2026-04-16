@@ -87,4 +87,34 @@ class AuthControllerTest extends TestCase
                 'email' => $user->email,
             ]);
     }
+
+    public function test_user_can_reset_password(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('old-password'),
+        ]);
+
+        $response = $this->postJson('/api/reset-password', [
+            'email' => $user->email,
+            'old_password' => 'old-password',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'message',
+                'temporary_password',
+            ]);
+
+        $this->assertTrue(Hash::check($response->json('temporary_password'), $user->fresh()->password));
+    }
+
+    public function test_reset_password_validation_fails(): void
+    {
+        $response = $this->postJson('/api/reset-password', [
+            'email' => 'nonexistent@example.com',
+            'old_password' => 'some-password',
+        ]);
+
+        $response->assertStatus(422);
+    }
 }

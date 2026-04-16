@@ -71,4 +71,28 @@ class UserServiceTest extends TestCase
         $this->assertNotNull($result['password']);
         $this->assertTrue(Hash::check($result['password'], $result['user']->fresh()->password));
     }
+
+    public function test_reset_password_success(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('old-password'),
+        ]);
+
+        $result = $this->userService->resetPassword($user->email, 'old-password');
+
+        $this->assertInstanceOf(User::class, $result['user']);
+        $this->assertNotNull($result['password']);
+        $this->assertTrue(Hash::check($result['password'], $result['user']->fresh()->password));
+        $this->assertNotEquals('old-password', $result['password']);
+    }
+
+    public function test_reset_password_failure_invalid_old_password(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('correct-old-password'),
+        ]);
+
+        $this->expectException(ValidationException::class);
+        $this->userService->resetPassword($user->email, 'wrong-old-password');
+    }
 }

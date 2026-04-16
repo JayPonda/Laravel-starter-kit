@@ -9,7 +9,7 @@ $port = getEnvVar($env, 'REDIS_PORT', '6379');
 $password = getEnvVar($env, 'REDIS_PASSWORD', '');
 $maxMemory = getEnvVar($env, 'REDIS_MAX_MEMORY', '256mb');
 $dir = getEnvVar($env, 'REDIS_DIR', '/data');
-$logFile = getEnvVar($env, 'REDIS_LOGFILE', '/var/log/redis/redis.log');
+$logFile = getEnvVar($env, 'REDIS_LOGFILE', $dir.'/redis.log');
 $requirePass = getEnvVar($env, 'REDIS_PASSWORD', 'password');
 
 $config = <<<CONF
@@ -60,10 +60,10 @@ slowlog-log-slower-than 10000
 slowlog-max-len 128
 CONF;
 
-$path = __DIR__.'/../storage/redis.conf';
+$path = __DIR__.'/../redis.conf';
 file_put_contents($path, $config);
 
-echo "Redis config generated at: storage/redis.conf\n";
+echo "Redis config generated at: ../redis.conf\n";
 echo "Host: {$bind}\n";
 echo "Port: {$port}\n";
 if (empty($password)) {

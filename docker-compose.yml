@@ -11,7 +11,7 @@ services:
             - "${DB_PORT:-3311}:3306"
         volumes:
             - mysql_data:/var/lib/mysql
-            - ./storage/database.sql:/docker-entrypoint-initdb.d/init.sql:ro
+            - ./database.sql:/docker-entrypoint-initdb.d/init.sql:ro
         networks:
             - laravel
 
@@ -23,7 +23,7 @@ services:
             - "${REDIS_PORT:-6379}:6379"
         volumes:
             - redis_data:/data
-            - ./storage/redis.conf:/usr/local/etc/redis/redis.conf:ro
+            - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
         networks:
             - laravel
 

@@ -1,11 +1,10 @@
 <?php
 
+use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\WebAuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [HealthCheckController::class, 'index'])->name('health');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [WebAuthController::class, 'showLoginForm'])->name('login');
@@ -17,5 +16,5 @@ Route::middleware('guest')->group(function () {
 Route::post('logout', [WebAuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 Route::get('/dashboard', function () {
-    return "<h1>Welcome to the Dashboard</h1><form method='POST' action='".route('logout')."'>".csrf_field()."<button type='submit'>Logout</button></form>";
+    return view('dashboard');
 })->middleware('auth')->name('dashboard');

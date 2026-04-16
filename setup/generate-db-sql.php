@@ -17,9 +17,9 @@ GRANT ALL PRIVILEGES ON `{$dbName}`.* TO '{$dbUser}'@'%';
 FLUSH PRIVILEGES;
 SQL;
 
-$path = __DIR__.'/../storage/database.sql';
+$path = __DIR__.'/../database.sql';
 file_put_contents($path, $sql);
 
-echo "SQL file generated at: storage/database.sql\n";
+echo "SQL file generated at: ../database.sql\n";
 echo "Database: {$dbName}\n";
 echo "User: {$dbUser}\n";

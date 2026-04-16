@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__.'/setup/utility.php';
+
 function runCommand($command, $description)
 {
     echo "\n>>> $description\n";
@@ -17,6 +19,9 @@ $shouldInstall = isset($options['i']);
 
 // We are now inside the template directory
 $templateDir = __DIR__;
+
+// Load environment
+$env = getAppEnv();
 
 // 1. & 2. Generate MySQL and Redis configs
 // These need to run first as Docker depends on them (via volumes)
@@ -54,7 +59,7 @@ if (! $ready) {
 echo "\nMySQL is ready!\n";
 
 // Execute the generated SQL file directly
-runCommand("docker compose exec -T mysql mysql -u root -p$dbPassword < storage/database.sql", 'Applying SQL Configuration directly to MySQL');
+runCommand("docker compose exec -T mysql mysql -u root -p$dbPassword < ./database.sql", 'Applying SQL Configuration directly to MySQL');
 
 // 4. Conditional Install
 if ($shouldInstall) {
@@ -79,5 +84,7 @@ runCommand('./vendor/bin/pint', 'Running Laravel Pint (Linting)');
 // 9. Artisan test
 runCommand('php artisan test', 'Running Tests');
 
+$port = getEnvVar($env, 'SERVER_PORT', '8000');
+
 // 10. Artisan serve
-runCommand('php artisan serve', "Starting Laravel Development Server on port $port");
+runCommand("php artisan serve --port=$port", "Starting Laravel Development Server on port $port");
