@@ -53,4 +53,20 @@ class UserService
 
         return ['user' => $user, 'password' => $password];
     }
+
+    public function resetPassword(string $email, string $oldPassword): array
+    {
+        $user = User::where('email', $email)->firstOrFail();
+        
+        if (!Hash::check($oldPassword, $user->password)) {
+            throw ValidationException::withMessages([
+                'old_password' => ['The old password is incorrect.'],
+            ]);
+        }
+        
+        $newPassword = Str::password(12);
+        $user->update(['password' => Hash::make($newPassword)]);
+
+        return ['user' => $user, 'password' => $newPassword];
+    }
 }

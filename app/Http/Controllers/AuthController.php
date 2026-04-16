@@ -65,4 +65,22 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
+
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users',
+            'old_password' => 'required|string',
+        ]);
+
+        $result = $this->userService->resetPassword(
+            $request->email,
+            $request->old_password
+        );
+
+        return response()->json([
+            'message' => 'Password reset successfully',
+            'temporary_password' => $result['password'],
+        ]);
+    }
 }
