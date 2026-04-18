@@ -13,34 +13,42 @@ function runCommand($command, $description)
     }
 }
 
-// Parse options
+$SAIL = './vendor/bin/sail';
+
+// Parse options for installation
 $options = getopt('i');
 $shouldInstall = isset($options['i']);
 
-// We are now inside the template directory
-$templateDir = __DIR__;
+// 1. Ensure .env exists
+if (!file_exists('.env')) {
+    echo ">>> .env not found. Copying .env.example...\n";
+    copy('.env.example', '.env');
+}
 
-// Load environment
+// 2. Load environment
 $env = getAppEnv();
 
-// 1. & 2. Generate MySQL and Redis configs
-// These need to run first as Docker depends on them (via volumes)
+// 3. Optional Local Install (required if vendor/ is missing)
+if ($shouldInstall) {
+    runCommand('composer install', 'Installing Composer Dependencies locally');
+    runCommand('npm install', 'Installing NPM Dependencies locally');
+}
+
+// 4. Generate MySQL and Redis configs (Docker volumes depend on these)
 runCommand('php setup/generate-db-sql.php', 'Generating MySQL Config');
 runCommand('php setup/generate-redis-conf.php', 'Generating Redis Config');
 
-// 3. Start Docker
-runCommand('docker compose up -d', 'Starting Docker Containers');
+// 5. Start Sail
+runCommand("$SAIL up -d", 'Starting Laravel Sail Containers');
 
-// Wait for MySQL to be ready
+// 6. Wait for MySQL to be ready
 echo "\n>>> Waiting for MySQL to be ready...\n";
 $maxAttempts = 30;
 $attempt = 0;
 $ready = false;
 while ($attempt < $maxAttempts) {
-    // We use 'mysqladmin ping' to check if the server is alive
-    // The root password is taken from the same logic as docker-compose.yml: DB_PASSWORD or 'root'
-    $dbPassword = getenv('DB_PASSWORD') ?: 'password';
-    $checkCommand = "docker compose exec -T mysql mysqladmin ping -u root -p$dbPassword 2>/dev/null";
+    // Check if we can connect to the DB via Artisan
+    $checkCommand = "$SAIL artisan db:show > /dev/null 2>&1";
     exec($checkCommand, $output, $returnVar);
 
     if ($returnVar === 0) {
@@ -52,39 +60,24 @@ while ($attempt < $maxAttempts) {
     echo '.';
 }
 
-if (! $ready) {
+if (!$ready) {
     echo "\nError: MySQL did not become ready in time.\n";
     exit(1);
 }
 echo "\nMySQL is ready!\n";
 
-// Execute the generated SQL file directly
-runCommand("docker compose exec -T mysql mysql -u root -p$dbPassword < ./database.sql", 'Applying SQL Configuration directly to MySQL');
+// 7. Artisan key:generate
+runCommand("$SAIL artisan key:generate", 'Generating App Key');
 
-// 4. Conditional Install
-if ($shouldInstall) {
-    runCommand('composer install', 'Installing Composer Dependencies');
-    runCommand('npm install', 'Installing NPM Dependencies');
-} else {
-    echo "\n>>> Skipping installations (use -i to install)\n";
-}
+// 8. Artisan storage:link
+runCommand("$SAIL artisan storage:link", 'Linking Storage');
 
-// 5. Artisan storage:link
-runCommand('php artisan storage:link', 'Linking Storage');
+// 9. Artisan migrate
+runCommand("$SAIL artisan migrate --force", 'Running Database Migrations');
 
-// 6. Artisan key:generate
-runCommand('php artisan key:generate', 'Generating App Key');
+// 10. Artisan test
+runCommand("$SAIL test", 'Running Tests');
 
-// 7. Artisan migrate
-runCommand('php artisan migrate', 'Running Database Migrations');
-
-// 8. Artisan pint
-runCommand('./vendor/bin/pint', 'Running Laravel Pint (Linting)');
-
-// 9. Artisan test
-runCommand('php artisan test', 'Running Tests');
-
-$port = getEnvVar($env, 'SERVER_PORT', '8000');
-
-// 10. Artisan serve
-runCommand("php artisan serve --port=$port", "Starting Laravel Development Server on port $port");
+echo "\n🚀 Setup complete! Your application is running via Sail.\n";
+echo "🔗 Access your app at: " . (getenv('APP_URL') ?: 'http://localhost:20143') . "\n";
+echo "💡 Use 'make down' to stop the environment.\n";

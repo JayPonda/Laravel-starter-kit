@@ -1,46 +1,42 @@
-.PHONY: help up down restart migrate seed test serve dev install setup shell run
+.PHONY: help up down restart migrate fresh seed test shell run config queue
+
+SAIL := ./vendor/bin/sail
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-run: ## Run the full setup and start the server. Use 'make run i=1' to include installations.
+run: ## Fully automate setup: Docker + Migrations + Tests. Use 'make run i=1' to include installations.
 	php run.php $(if $(i),-i)
 
-up: ## Start docker containers
-	docker compose up -d
+up: ## Start Sail containers
+	$(SAIL) up -d
 
-down: ## Stop docker containers
-	docker compose down
+down: ## Stop Sail containers
+	$(SAIL) down
 
-restart: down up ## Restart docker containers
+restart: down up ## Restart Sail containers
 
-migrate: ## Run database migrations
-	php artisan migrate
+migrate: ## Run database migrations inside Sail
+	$(SAIL) artisan migrate
 
-seed: ## Run database seeders
-	php artisan db:seed
+fresh: ## Freshly migrate and seed the database
+	$(SAIL) artisan migrate:fresh --seed
 
-test: ## Run tests
-	php artisan test
+seed: ## Run database seeders inside Sail
+	$(SAIL) artisan db:seed
 
-serve: ## Start the PHP development server
-	php artisan serve
+queue: ## Start the Sail queue worker
+	$(SAIL) artisan queue:work
 
-dev: ## Start the Vite development server
-	npm run dev
+test: ## Run tests inside Sail
+	$(SAIL) test
 
-install: ## Install composer and npm dependencies
-	composer install && npm install
+shell: ## Open a bash shell in the Sail app container
+	$(SAIL) shell
 
-setup: install config ## Initial project setup
-	cp -n .env.example .env || true
-	php artisan key:generate
-	php artisan migrate
-	@echo "Setup complete. Run 'make up' to start services and 'make serve' for the app."
+crud: ## Create a full CRUD stack (usage: make crud name=Post)
+	$(SAIL) artisan make:crud $(name)
 
-config: ## Generate MySQL and Redis configurations
+config: ## Generate MySQL and Redis configurations (used by Docker volumes)
 	php setup/generate-db-sql.php
 	php setup/generate-redis-conf.php
-
-shell: ## Open a bash shell
-	bash
