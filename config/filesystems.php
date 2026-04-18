@@ -60,6 +60,18 @@ return [
             'report' => false,
         ],
 
+        'minio' => [
+            'driver' => 's3',
+            'key' => env('MINIO_ROOT_USER', 'sail'),
+            'secret' => env('MINIO_ROOT_PASSWORD', 'password'),
+            'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+            'bucket' => env('AWS_BUCKET', 'laravel'),
+            'endpoint' => env('MINIO_ENDPOINT', 'http://minio:9000'),
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*
