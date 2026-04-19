@@ -44,7 +44,8 @@ class FileControllerTest extends TestCase
             'permission' => 'owner',
         ]);
 
-        Storage::disk('minio')->assertExists('uploads/' . $file->hashName());
+        $datePath = now()->format('Y-m-d');
+        Storage::disk('minio')->assertExists("file-upload/{$datePath}/" . $file->hashName());
     }
 
     public function test_user_can_list_only_their_files()
@@ -150,7 +151,7 @@ class FileControllerTest extends TestCase
             'mime_type' => 'image/jpeg',
             'size' => 100,
         ]);
-        
+
         $owner->files()->attach($file->id, ['permission' => 'owner']);
         $viewer->files()->attach($file->id, ['permission' => 'viewer']);
 
@@ -167,4 +168,68 @@ class FileControllerTest extends TestCase
         $this->assertDatabaseMissing('files', ['id' => $file->id]);
         Storage::disk('minio')->assertMissing('uploads/delete_me.jpg');
     }
+
+    public function test_web_index_shows_files_categorized()
+    {
+        $user = User::factory()->create();
+
+        $editable = File::create([
+            'original_name' => 'editable.txt',
+            'path' => 'p1', 'mime_type' => 'text/plain', 'size' => 10
+        ]);
+        $user->files()->attach($editable->id, ['permission' => 'editor']);
+
+        $viewOnly = File::create([
+            'original_name' => 'readonly.txt',
+            'path' => 'p2', 'mime_type' => 'text/plain', 'size' => 10
+        ]);
+        $user->files()->attach($viewOnly->id, ['permission' => 'viewer']);
+
+        $response = $this->actingAs($user)
+            ->get('/files');
+
+        $response->assertStatus(200)
+            ->assertViewHas('editableFiles')
+            ->assertViewHas('viewOnlyFiles');
+
+        $this->assertCount(1, $response->viewData('editableFiles'));
+        $this->assertCount(1, $response->viewData('viewOnlyFiles'));
+    }
+
+    public function test_web_upload_redirects_back()
+    {
+        $user = User::factory()->create();
+        $file = UploadedFile::fake()->create('web_doc.pdf', 500);
+
+        $response = $this->actingAs($user)
+            ->post('/files', [
+                'file' => $file,
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', 'File uploaded successfully!');
+
+        $this->assertDatabaseHas('files', ['original_name' => 'web_doc.pdf']);
+    }
+
+    public function test_web_delete_redirects_back()
+    {
+        $user = User::factory()->create();
+        $file = File::create([
+            'original_name' => 'web_delete.txt',
+            'path' => 'uploads/web_delete.txt',
+            'mime_type' => 'text/plain',
+            'size' => 100,
+        ]);
+        $user->files()->attach($file->id, ['permission' => 'owner']);
+
+        $response = $this->actingAs($user)
+            ->delete("/files/{$file->id}");
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', 'File deleted successfully!');
+
+        $this->assertDatabaseMissing('files', ['id' => $file->id]);
+    }
 }
+

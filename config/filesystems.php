@@ -68,7 +68,7 @@ return [
             'bucket' => env('AWS_BUCKET', 'laravel'),
             'endpoint' => env('MINIO_ENDPOINT', 'http://minio:9000'),
             'use_path_style_endpoint' => true,
-            'throw' => false,
+            'throw' => true,
             'report' => false,
         ],
 

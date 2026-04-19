@@ -62,7 +62,7 @@
         </div>
 
         <div class="card">
-            <h2>Quick Links</h2>
+            <h2 id="links-title">Quick Links</h2>
             <div class="action-list">
                 <!-- Link 1 -->
                 <a href="{{ $content['dashboard']['quick_links'][0]['url'] }}" class="action-item">

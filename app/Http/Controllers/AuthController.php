@@ -66,6 +66,12 @@ class AuthController extends Controller
         return response()->json($request->user());
     }
 
+    public function index(Request $request): JsonResponse
+    {
+        $users = \App\Models\User::where('id', '!=', $request->user()->id)->get();
+        return response()->json($users);
+    }
+
     public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([

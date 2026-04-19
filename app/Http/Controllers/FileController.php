@@ -12,12 +12,29 @@ class FileController extends Controller
     /**
      * List user's files
      */
-    public function index()
+    public function index(Request $request)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $files = $user->files()->paginate(15);
-        return response()->json($files);
+
+        if ($request->wantsJson()) {
+            $files = $user->files()->with('users')->paginate(15);
+            return response()->json($files);
+        }
+
+        $allFiles = $user->files()->with('users')->get();
+        
+        $myFiles = $allFiles->filter(function ($file) {
+            return $file->pivot->permission === 'owner';
+        });
+
+        $sharedFiles = $allFiles->filter(function ($file) {
+            return $file->pivot->permission !== 'owner';
+        });
+
+        $users = \App\Models\User::where('id', '!=', $user->id)->get();
+
+        return view('files.index', compact('myFiles', 'sharedFiles', 'users'));
     }
 
     /**
@@ -30,7 +47,17 @@ class FileController extends Controller
         ]);
 
         $uploadedFile = $request->file('file');
-        $path = $uploadedFile->store('uploads', 'minio');
+        $datePath = now()->format('Y-m-d');
+        
+        $path = $uploadedFile->storeAs(
+            "file-upload/{$datePath}", 
+            $uploadedFile->hashName(), 
+            'minio'
+        );
+
+        if (!$path) {
+            throw new \Exception('Failed to store file on Minio disk.');
+        }
 
         $file = File::create([
             'original_name' => $uploadedFile->getClientOriginalName(),
@@ -45,10 +72,14 @@ class FileController extends Controller
         $user = Auth::user();
         $user->files()->attach($file->id, ['permission' => 'owner']);
 
-        return response()->json([
-            'message' => 'File uploaded successfully',
-            'file' => $file
-        ], 201);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'File uploaded successfully',
+                'file' => $file
+            ], 201);
+        }
+
+        return redirect()->back()->with('success', 'File uploaded successfully!');
     }
 
     /**
@@ -57,20 +88,87 @@ class FileController extends Controller
     public function show(File $file)
     {
         $this->authorizeAccess($file);
-        return response()->json($file);
+
+        if (request()->expectsJson()) {
+            return response()->json($file);
+        }
+
+        if (!Storage::disk($file->disk)->exists($file->path)) {
+            abort(404, 'File not found on storage.');
+        }
+
+        // For non-local disks, stream the file as a response
+        $stream = Storage::disk($file->disk)->readStream($file->path);
+        if (!$stream) {
+            abort(404, 'File not found on storage.');
+        }
+        return response()->streamDownload(function () use ($stream) {
+            fpassthru($stream);
+        }, $file->original_name, [
+            'Content-Type' => $file->mime_type,
+        ]);
     }
 
     /**
      * Delete a file
      */
-    public function destroy(File $file)
+    public function destroy(Request $request, File $file)
     {
         $this->authorizeAccess($file, 'owner');
 
         Storage::disk($file->disk)->delete($file->path);
         $file->delete();
 
-        return response()->json(['message' => 'File deleted successfully']);
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'File deleted successfully']);
+        }
+
+        return redirect()->back()->with('success', 'File deleted successfully!');
+    }
+
+    /**
+     * Share a file with another user
+     */
+    public function share(Request $request, File $file)
+    {
+        $this->authorizeAccess($file, 'owner');
+
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'permission' => 'required|in:editor,viewer,none',
+        ]);
+
+        if ($request->permission === 'none') {
+            $file->users()->detach($request->user_id);
+            $message = 'Access revoked successfully';
+        } else {
+            $file->users()->syncWithoutDetaching([
+                $request->user_id => ['permission' => $request->permission]
+            ]);
+            $message = 'File shared successfully';
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => $message]);
+        }
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Remove access for a specific user
+     */
+    public function unshare(Request $request, File $file, \App\Models\User $user)
+    {
+        $this->authorizeAccess($file, 'owner');
+
+        $file->users()->detach($user->id);
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Access revoked successfully']);
+        }
+
+        return redirect()->back()->with('success', 'Access revoked successfully!');
     }
 
     /**

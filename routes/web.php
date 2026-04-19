@@ -15,6 +15,17 @@ Route::middleware('guest')->group(function () {
 
 Route::post('logout', [WebAuthController::class, 'logout'])->name('logout')->middleware('auth');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware('auth')->name('dashboard');
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $files = $user->files()->wherePivot('permission', 'owner')->latest()->take(5)->get();
+        return view('dashboard', compact('files'));
+    })->name('dashboard');
+
+    Route::get('/files', [\App\Http\Controllers\FileController::class, 'index'])->name('files.index');
+    Route::post('/files', [\App\Http\Controllers\FileController::class, 'store'])->name('files.store');
+    Route::post('/files/{file}/share', [\App\Http\Controllers\FileController::class, 'share'])->name('files.share');
+    Route::delete('/files/{file}/share/{user}', [\App\Http\Controllers\FileController::class, 'unshare'])->name('files.unshare');
+    Route::delete('/files/{file}', [\App\Http\Controllers\FileController::class, 'destroy'])->name('files.destroy');
+});

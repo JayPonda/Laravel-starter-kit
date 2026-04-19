@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Files - Laravel Boilerplate</title>
+    <link rel="stylesheet" href="styleguild.css">
+</head>
+<body>
+    <div id="loading-screen" class="loading-screen">Loading files...</div>
+
+    <div id="content" class="hidden">
+        <nav class="navbar">
+            <a href="dashboard.html" class="navbar-brand">Laravel Boilerplate</a>
+            <div class="user-nav">
+                <a href="myfiles.html" class="logout-link">My Files</a>
+                <span id="nav-user-name" class="user-name"></span>
+                <span class="logout-link" onclick="logout()">Logout</span>
+            </div>
+        </nav>
+
+        <div class="main-container">
+            <div class="page-header">
+                <h1>My Files</h1>
+            </div>
+
+            <div class="flex-column">
+                <!-- Upload Section -->
+                <div class="card">
+                    <h2>Upload New File</h2>
+                    <form id="upload-form" class="upload-form">
+                        <div class="form-group">
+                            <input type="file" id="file-input" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-auto mt-4">
+                            Upload File
+                        </button>
+                    </form>
+                    <p id="upload-status" class="mt-4"></p>
+                </div>
+
+                <!-- My Files -->
+                <div class="card">
+                    <div class="flex-between-center mb-4">
+                        <h2 class="m-0">My Files</h2>
+                    </div>
+                    <p class="text-small">Files you have uploaded.</p>
+                    <div id="my-files-list" class="action-list mt-4">
+                        <!-- Files will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Shared Files -->
+                <div class="card">
+                    <div class="flex-between-center mb-4">
+                        <h2 class="m-0">Shared Files</h2>
+                    </div>
+                    <p class="text-small">Files shared with you by others.</p>
+                    <div id="shared-files-list" class="action-list mt-4">
+                        <!-- Files will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="shareModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="m-0" id="modalTitle">Share File</h2>
+                <button type="button" class="modal-close" onclick="closeShareModal()">&times;</button>
+            </div>
+            <p id="shareFileName" class="text-small mb-4"></p>
+            <form id="shareForm">
+                <div class="form-group">
+                    <label>Select User</label>
+                    <select id="share-user-select" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="">Choose a user...</option>
+                    </select>
+                </div>
+                <div class="form-group mt-4">
+                    <label>Permission</label>
+                    <select id="share-permission-select" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="viewer">Viewer</option>
+                        <option value="editor">Editor</option>
+                        <option value="none">None (Remove access)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary mt-4" id="submitBtn">Share File</button>
+            </form>
+            <p id="share-status" class="mt-4"></p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin.replace(':8081', ':20143') + '/api';
+        const token = localStorage.getItem('token');
+        let currentFileId = null;
+        let availableUsers = [];
+        let currentUserId = null;
+
+        if (!token) window.location.href = 'login.html';
+
+        async function init() {
+            try {
+                const [userRes, usersRes] = await Promise.all([
+                    fetch(`${API_URL}/me`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }),
+                    fetch(`${API_URL}/users`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } })
+                ]);
+                
+                if (!userRes.ok) throw new Error('Unauthorized');
+                
+                const user = await userRes.json();
+                currentUserId = user.id;
+                const userNameEl = document.getElementById('nav-user-name');
+                if (userNameEl) userNameEl.textContent = user.name;
+                
+                availableUsers = await usersRes.json();
+                populateUserSelect();
+                
+                await loadFiles();
+                
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('content').classList.remove('hidden');
+            } catch (err) {
+                console.error(err);
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        }
+
+        function populateUserSelect() {
+            const select = document.getElementById('share-user-select');
+            select.innerHTML = '<option value="">Choose a user...</option>';
+            availableUsers.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.name} ( ${user.email} )`;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadFiles() {
+            try {
+                const res = await fetch(`${API_URL}/files`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+                const files = data.data || data;
+                renderFiles(files);
+            } catch (err) {
+                console.error('Failed to load files', err);
+            }
+        }
+
+        function renderFiles(files) {
+            const myFilesList = document.getElementById('my-files-list');
+            const sharedFilesList = document.getElementById('shared-files-list');
+            
+            myFilesList.innerHTML = '';
+            sharedFilesList.innerHTML = '';
+
+            let myFilesCount = 0;
+            let sharedFilesCount = 0;
+
+            files.forEach(file => {
+                const permission = file.pivot ? file.pivot.permission : 'owner';
+                const isOwner = permission === 'owner';
+                
+                const item = document.createElement('div');
+                item.className = 'action-item flex-between-center';
+                
+                let actions = '';
+                let sharedWithHtml = '';
+
+                if (isOwner) {
+                    const sharedWith = (file.users || []).filter(u => u.id !== currentUserId);
+                    if (sharedWith.length > 0) {
+                        sharedWithHtml = `
+                            <div class="mt-2">
+                                <p class="text-small" style="color: #0066cc;">Shared with (click to edit): 
+                                    ${sharedWith.map(u => `
+                                        <span class="status-badge status-loading" style="margin: 0 2px; padding: 2px 6px; font-size: 10px; cursor: pointer;"
+                                              onclick="openShareModal(${file.id}, '${file.original_name.replace(/'/g, "\\'")}', ${u.id}, '${u.pivot.permission}')">
+                                            ${u.name} (${u.pivot.permission})
+                                        </span>
+                                    `).join('')}
+                                </p>
+                            </div>
+                        `;
+                    }
+
+                    actions = `
+                        <button onclick="openShareModal(${file.id}, '${file.original_name.replace(/'/g, "\\'")}')" class="btn btn-primary btn-small mr-2">Add User</button>
+                        <button onclick="downloadFile(${file.id}, '${file.original_name.replace(/'/g, "\\'")}')" class="btn btn-primary btn-small mr-2">Download</button>
+                        <button onclick="deleteFile(${file.id})" class="btn btn-danger btn-small">Delete</button>
+                    `;
+                } else {
+                    actions = `
+                        <button onclick="downloadFile(${file.id}, '${file.original_name.replace(/'/g, "\\'")}')" class="btn btn-primary btn-small">Download</button>
+                    `;
+                }
+
+                item.innerHTML = `
+                    <div class="flex-center flex-1">
+                        <div class="action-icon">${isOwner ? '📄' : '👁️'}</div>
+                        <div>
+                            <strong>${file.original_name}</strong>
+                            <p class="text-small">${(file.size / 1024).toFixed(2)} KB | ${permission}</p>
+                            ${sharedWithHtml}
+                        </div>
+                    </div>
+                    <div class="user-nav">
+                        ${actions}
+                    </div>
+                `;
+
+                if (isOwner) {
+                    myFilesList.appendChild(item);
+                    myFilesCount++;
+                } else {
+                    sharedFilesList.appendChild(item);
+                    sharedFilesCount++;
+                }
+            });
+
+            if (myFilesCount === 0) myFilesList.innerHTML = '<p class="text-muted">No files found.</p>';
+            if (sharedFilesCount === 0) sharedFilesList.innerHTML = '<p class="text-muted">No shared files found.</p>';
+        }
+
+        // Modal Logic
+        function openShareModal(fileId, fileName, userId = null, permission = 'viewer') {
+            currentFileId = fileId;
+            const modal = document.getElementById('shareModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const submitBtn = document.getElementById('submitBtn');
+            const userSelect = document.getElementById('share-user-select');
+            const permissionSelect = document.getElementById('share-permission-select');
+            
+            document.getElementById('shareFileName').textContent = `File: ${fileName}`;
+            document.getElementById('share-status').textContent = '';
+            
+            if (userId) {
+                modalTitle.textContent = 'Edit Permission';
+                submitBtn.textContent = 'Update Permission';
+                userSelect.value = userId;
+                userSelect.style.backgroundColor = '#f1f3f5';
+                permissionSelect.value = permission;
+            } else {
+                modalTitle.textContent = 'Share File';
+                submitBtn.textContent = 'Share File';
+                userSelect.value = '';
+                userSelect.style.backgroundColor = '#fff';
+                permissionSelect.value = 'viewer';
+            }
+
+            modal.classList.add('show');
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.remove('show');
+            currentFileId = null;
+        }
+
+        document.getElementById('shareForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('share-user-select').value;
+            const permission = document.getElementById('share-permission-select').value;
+            const status = document.getElementById('share-status');
+
+            status.className = 'info-value mt-4';
+            status.textContent = 'Processing...';
+
+            try {
+                const res = await fetch(`${API_URL}/files/${currentFileId}/share`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`, 
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: userId, permission: permission })
+                });
+
+                if (res.ok) {
+                    status.className = 'success mt-4';
+                    const data = await res.json();
+                    status.textContent = data.message;
+                    await loadFiles();
+                    setTimeout(closeShareModal, 1000);
+                } else {
+                    const error = await res.json();
+                    status.className = 'error mt-4';
+                    status.textContent = error.message || 'Processing failed';
+                }
+            } catch (err) {
+                status.className = 'error mt-4';
+                status.textContent = 'An error occurred';
+            }
+        };
+
+        // Other handlers...
+        document.getElementById('upload-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('file-input');
+            const status = document.getElementById('upload-status');
+            
+            if (!fileInput.files[0]) return;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            status.className = 'info-value mt-4';
+            status.textContent = 'Uploading...';
+
+            try {
+                const res = await fetch(`${API_URL}/files`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+                    body: formData
+                });
+
+                if (res.ok) {
+                    status.className = 'success mt-4';
+                    status.textContent = 'File uploaded successfully!';
+                    fileInput.value = '';
+                    await loadFiles();
+                } else {
+                    const error = await res.json();
+                    status.className = 'error mt-4';
+                    status.textContent = error.message || 'Upload failed';
+                }
+            } catch (err) {
+                status.className = 'error mt-4';
+                status.textContent = 'An error occurred during upload';
+            }
+        };
+
+        async function downloadFile(id, filename) {
+            try {
+                const res = await fetch(`${API_URL}/files/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error('Download failed');
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (err) {
+                alert('Failed to download file');
+            }
+        }
+
+        async function deleteFile(id) {
+            if (!confirm('Are you sure?')) return;
+            try {
+                const res = await fetch(`${API_URL}/files/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                });
+                if (res.ok) {
+                    await loadFiles();
+                } else {
+                    alert('Failed to delete file');
+                }
+            } catch (err) {
+                alert('An error occurred');
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch(`${API_URL}/logout`, { 
+                    method: 'POST', 
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } 
+                });
+            } finally {
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('shareModal');
+            if (event.target == modal) closeShareModal();
+        }
+
+        init();
+    </script>
+</body>
+</html>
