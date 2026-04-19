@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->api(preg_split('/,/', env('CORS_ALLOWED_ORIGINS', '')), ['\Illuminate\Http\Middleware\HandleCors']);
+        $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(function ($request, $e) {
@@ -31,12 +31,12 @@ return Application::configure(basePath: dirname(__DIR__))
                 $status = 500;
 
                 if ($e instanceof HttpExceptionInterface) {
-                    $status = $e->getStatusCode();
+                    $status = (int) $e->getStatusCode();
                 } elseif ($e instanceof ValidationException) {
                     $status = 422;
-                } elseif ($e->getCode() >= 400 && $e->getCode() < 600) {
+                } elseif (is_numeric($e->getCode()) && $e->getCode() >= 400 && $e->getCode() < 600) {
                     // Some custom exceptions might set a valid HTTP code via getCode()
-                    $status = $e->getCode();
+                    $status = (int) $e->getCode();
                 }
 
                 $response = [

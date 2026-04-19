@@ -1,7 +1,7 @@
 services:
     backend:
         build:
-            context: ./vendor/laravel/sail/runtimes/8.3
+            context: ./docker/8.3
             dockerfile: Dockerfile
             args:
                 WWWGROUP: '${WWWGROUP}'
@@ -19,13 +19,13 @@ services:
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
         volumes:
             - '.:/var/www/html'
+            - './docker/8.3/php.ini:/etc/php/8.3/cli/conf.d/99-sail.ini'
         networks:
             - sail
         depends_on:
             - mysql
             - redis
             - minio
-            - valkey
     mysql:
         image: 'mysql:8.0'
         ports:
@@ -51,7 +51,7 @@ services:
             retries: 3
             timeout: 5s
     redis:
-        image: 'redis:alpine'
+        image: 'redis:7-alpine'
         ports:
             - '${FORWARD_REDIS_PORT:-6379}:6379'
         command: 'redis-server /usr/local/etc/redis/redis.conf'
@@ -88,21 +88,14 @@ services:
                 - local
             retries: 3
             timeout: 5s
-    valkey:
-        image: 'valkey/valkey:alpine'
+    frontend:
+        image: 'nginx:alpine'
         ports:
-            - '${FORWARD_VALKEY_PORT:-6379}:6379'
+            - '${FORWARD_FRONTEND_PORT:-8081}:80'
         volumes:
-            - 'sail-valkey:/data'
+            - './public:/usr/share/nginx/html:ro'
         networks:
             - sail
-        healthcheck:
-            test:
-                - CMD
-                - valkey-cli
-                - ping
-            retries: 3
-            timeout: 5s
 networks:
     sail:
         driver: bridge
@@ -112,6 +105,4 @@ volumes:
     sail-redis:
         driver: local
     sail-minio:
-        driver: local
-    sail-valkey:
         driver: local

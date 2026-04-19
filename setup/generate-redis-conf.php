@@ -4,13 +4,22 @@ require_once __DIR__.'/utility.php';
 
 $env = getAppEnv();
 
-$bind = getEnvVar($env, 'REDIS_HOST', '127.0.0.1');
+// In Docker context, we usually want to bind to all interfaces
+$bind = getEnvVar($env, 'REDIS_BIND', '0.0.0.0');
 $port = getEnvVar($env, 'REDIS_PORT', '6379');
 $password = getEnvVar($env, 'REDIS_PASSWORD', '');
 $maxMemory = getEnvVar($env, 'REDIS_MAX_MEMORY', '256mb');
 $dir = getEnvVar($env, 'REDIS_DIR', '/data');
-$logFile = getEnvVar($env, 'REDIS_LOGFILE', $dir.'/redis.log');
-$requirePass = getEnvVar($env, 'REDIS_PASSWORD', 'password');
+// In Docker, we often log to stdout (empty logfile)
+$logFile = getEnvVar($env, 'REDIS_LOGFILE', '');
+
+$aclUser = "user default on ";
+if (empty($password) || $password === 'null') {
+    $aclUser .= "nopass ";
+} else {
+    $aclUser .= ">" . $password . " ";
+}
+$aclUser .= "~* +@all -flushall -flushdb -config -keys -shutdown -debug -module";
 
 $config = <<<CONF
 # Redis Configuration File
@@ -19,19 +28,12 @@ $config = <<<CONF
 # Network
 bind {$bind}
 port {$port}
-protected-mode yes
+protected-mode no
 
-# Security
-requirepass {$requirePass}
-
-# Rename dangerous commands
-rename-command FLUSHALL ""
-rename-command FLUSHDB ""
-rename-command CONFIG ""
-rename-command KEYS ""
-rename-command SHUTDOWN ""
-rename-command DEBUG ""
-rename-command MODULE ""
+# Access Control List (ACL)
+# Default user (used by Laravel) can do everything EXCEPT dangerous commands
+# Commands restricted: FLUSHALL, FLUSHDB, CONFIG, KEYS, SHUTDOWN, DEBUG, MODULE
+{$aclUser}
 
 # Memory
 maxmemory {$maxMemory}
@@ -48,7 +50,7 @@ dir {$dir}
 
 # Logging
 loglevel notice
-logfile {$logFile}
+logfile "{$logFile}"
 
 # Client
 timeout 300
@@ -63,9 +65,11 @@ CONF;
 $path = __DIR__.'/../redis.conf';
 file_put_contents($path, $config);
 
-echo "Redis config generated at: ../redis.conf\n";
-echo "Host: {$bind}\n";
-echo "Port: {$port}\n";
-if (empty($password)) {
-    echo "WARNING: No REDIS_PASSWORD set in .env - using default.\n";
+echo "✅ Redis config generated at: redis.conf\n";
+echo "📍 Host: {$bind}\n";
+echo "🔌 Port: {$port}\n";
+if (empty($password) || $password === 'null') {
+    echo "🔓 Auth: No password (ACL unrestricted commands disabled)\n";
+} else {
+    echo "🔒 Auth: Password enabled (ACL security active)\n";
 }
