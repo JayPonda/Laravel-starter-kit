@@ -1,0 +1,38 @@
+{
+    "dashboard": {
+        "welcome": {
+            "title": "Getting Started",
+            "description": "Your application is ready! This dashboard is built with a clean Service-Oriented Architecture and is ready for your custom business logic."
+        },
+        "stats": [
+            { "label": "Application", "value": "Online" },
+            { "label": "Database", "value": "MySQL 8" },
+            { "label": "Cache", "value": "Redis 7" }
+        ],
+        "quick_links": [
+            {
+                "title": "System Health",
+                "description": "Check real-time connection status.",
+                "url": "index.html",
+                "icon": "API"
+            },
+            {
+                "title": "Laravel Documentation",
+                "description": "Official framework guide.",
+                "url": "https://laravel.com/docs",
+                "icon": "DOC",
+                "external": true
+            }
+        ]
+    },
+    "profile": {
+        "title": "User Profile",
+        "role_label": "Role",
+        "default_role": "Developer",
+        "labels": {
+            "name": "Name",
+            "email": "Email",
+            "member_since": "Member Since"
+        }
+    }
+}

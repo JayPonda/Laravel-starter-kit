@@ -66,9 +66,6 @@ crud: ## Create a full CRUD stack (usage: make crud name=Post)
 model: ## Generate model + migration + factory + seeder (usage: make model name=Post)
 	docker compose exec backend php artisan make:model $(name) -mfs
 
-logic: ## Generate Controller + Service + Request + Request/Response DTOs (usage: make logic name=ProcessOrder)
-	docker compose exec backend php artisan make:logic-stack $(name)
-
 ini-pull: ## (Recovery) Copy php.ini from container to local docker/8.3/php.ini
 	docker compose cp backend:/etc/php/8.3/cli/conf.d/99-sail.ini ./docker/8.3/php.ini
 

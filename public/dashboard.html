@@ -3,120 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Laravel Starter</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #1c1e21; min-height: 100vh; }
-        nav { background: white; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .logo { font-size: 20px; font-weight: 700; color: #ff2d20; }
-        .user-menu { display: flex; align-items: center; gap: 20px; }
-        .logout-btn { color: #8d949e; cursor: pointer; font-size: 14px; font-weight: 500; }
-        .logout-btn:hover { color: #ff2d20; }
-        
-        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-        .page-header { margin-bottom: 40px; }
-        .page-header h1 { font-size: 32px; font-weight: 700; }
-        
-        .grid { display: grid; grid-template-columns: 350px 1fr; gap: 40px; }
-        .card { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        
-        .profile-info { text-align: center; }
-        .avatar { width: 80px; height: 80px; background: #ff2d20; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; margin: 0 auto 20px; }
-        .info-item { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #f1f3f5; font-size: 14px; }
-        .info-label { color: #8d949e; font-weight: 500; }
-        .info-value { color: #1c1e21; font-weight: 600; }
-        
-        .welcome-card { margin-bottom: 20px; }
-        .welcome-card h2 { margin-bottom: 16px; }
-        .welcome-card p { color: #8d949e; line-height: 1.6; margin-bottom: 24px; }
-        
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .stat-item { background: #f0f2f5; padding: 20px; border-radius: 8px; text-align: center; }
-        .stat-value { display: block; font-size: 18px; font-weight: 700; color: #1c1e21; margin-bottom: 4px; }
-        .stat-label { font-size: 12px; color: #8d949e; font-weight: 600; text-transform: uppercase; }
-
-        .action-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
-        .action-item { display: flex; align-items: center; gap: 16px; padding: 16px; border: 1px solid #f1f3f5; border-radius: 8px; text-decoration: none; color: inherit; transition: background 0.2s; }
-        .action-item:hover { background: #f8f9fa; }
-        .action-icon { width: 40px; height: 40px; background: #f0f2f5; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #8d949e; }
-        
-        .loading { display: flex; align-items: center; justify-content: center; height: 100vh; font-size: 18px; color: #8d949e; }
-        .hidden { display: none; }
-    </style>
+    <title>Dashboard - Laravel Boilerplate</title>
+    <link rel="stylesheet" href="styleguild.css">
 </head>
 <body>
-    <div id="loading-screen" class="loading">Loading dashboard...</div>
+    <div id="loading-screen" class="loading-screen">Loading dashboard...</div>
 
     <div id="dashboard-content" class="hidden">
-        <nav>
-            <div class="logo">Laravel Starter</div>
-            <div class="user-menu">
-                <span id="nav-user-name" style="font-weight: 600;"></span>
-                <span class="logout-btn" onclick="logout()">Logout</span>
+        <nav class="navbar">
+            <a href="index.html" class="navbar-brand">Laravel Boilerplate</a>
+            <div class="user-nav">
+                <span id="nav-user-name" class="user-name"></span>
+                <span class="logout-link" onclick="logout()">Logout</span>
             </div>
         </nav>
 
-        <div class="container">
+        <div class="main-container">
             <div class="page-header">
                 <h1>Welcome back, <span id="welcome-name">User</span>!</h1>
             </div>
 
             <div class="grid">
                 <!-- User Profile Card -->
-                <div class="card profile-info">
+                <div class="card text-center">
                     <div id="user-avatar" class="avatar">U</div>
-                    <h2>User Profile</h2>
+                    <h2 id="profile-card-title">--</h2>
                     <div class="info-item">
-                        <span class="info-label">Name</span>
+                        <span id="label-name" class="info-label">--</span>
                         <span id="profile-name" class="info-value">--</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Email</span>
+                        <span id="label-email" class="info-label">--</span>
                         <span id="profile-email" class="info-value">--</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Member Since</span>
+                        <span id="label-member-since" class="info-label">--</span>
                         <span id="profile-date" class="info-value">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="profile-role-label" class="info-label">--</span>
+                        <span id="profile-role-value" class="info-value">--</span>
                     </div>
                 </div>
 
                 <!-- Main Content Area -->
-                <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="flex-column">
                     <div class="card welcome-card">
-                        <h2>Getting Started</h2>
-                        <p>Your application is ready! This dashboard is built as a static frontend using Sanctum token authentication.</p>
+                        <h2 id="welcome-title">--</h2>
+                        <p id="welcome-desc">--</p>
                         
                         <div class="stats-grid">
                             <div class="stat-item">
-                                <span class="stat-value text-up">Online</span>
-                                <span class="stat-label">Application</span>
+                                <span id="stat-0-value" class="stat-value">--</span>
+                                <span id="stat-0-label" class="stat-label">--</span>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-value">MySQL 8</span>
-                                <span class="stat-label">Database</span>
+                                <span id="stat-1-value" class="stat-value">--</span>
+                                <span id="stat-1-label" class="stat-label">--</span>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-value">Redis 7</span>
-                                <span class="stat-label">Cache</span>
+                                <span id="stat-2-value" class="stat-value">--</span>
+                                <span id="stat-2-label" class="stat-label">--</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="card">
-                        <h2>Quick Links</h2>
+                        <h2 id="links-title">Quick Links</h2>
                         <div class="action-list">
-                            <a href="index.html" class="action-item">
-                                <div class="action-icon">API</div>
+                            <a id="link-0-url" href="#" class="action-item">
+                                <div id="link-0-icon" class="action-icon">--</div>
                                 <div>
-                                    <strong>System Health</strong>
-                                    <div style="font-size: 12px; color: #8d949e;">Check real-time connection status.</div>
+                                    <strong id="link-0-title">--</strong>
+                                    <p id="link-0-desc" class="text-small">--</p>
                                 </div>
                             </a>
-                            <a href="https://laravel.com/docs" target="_blank" class="action-item">
-                                <div class="action-icon">DOC</div>
+                            <a id="link-1-url" href="#" class="action-item" target="_blank">
+                                <div id="link-1-icon" class="action-icon">--</div>
                                 <div>
-                                    <strong>Laravel Documentation</strong>
-                                    <div style="font-size: 12px; color: #8d949e;">Official framework guide.</div>
+                                    <strong id="link-1-title">--</strong>
+                                    <p id="link-1-desc" class="text-small">--</p>
                                 </div>
                             </a>
                         </div>
@@ -130,65 +96,77 @@
         const API_URL = window.location.origin.replace(':8081', ':20143') + '/api';
         const token = localStorage.getItem('token');
 
-        if (!token) {
-            window.location.href = 'login.html';
-        }
+        if (!token) window.location.href = 'login.html';
 
-        async function fetchUser() {
+        async function init() {
             try {
-                const res = await fetch(`${API_URL}/me`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    }
-                });
-
-                if (!res.ok) throw new Error('Unauthorized');
-
-                const user = await res.json();
-                
-                // Update UI
-                document.getElementById('nav-user-name').textContent = user.name;
-                document.getElementById('welcome-name').textContent = user.name.split(' ')[0];
-                document.getElementById('profile-name').textContent = user.name;
-                document.getElementById('profile-email').textContent = user.email;
-                document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
-                
-                const date = new Date(user.created_at);
-                document.getElementById('profile-date').textContent = date.toLocaleDateString('en-US', { 
-                    month: 'short', day: 'numeric', year: 'numeric' 
-                });
-
-                // Show Content
-                document.getElementById('loading-screen').classList.add('hidden');
-                document.getElementById('dashboard-content').classList.remove('hidden');
-
+                const [userRes, contentRes] = await Promise.all([
+                    fetch(`${API_URL}/me`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }),
+                    fetch('content.json')
+                ]);
+                if (!userRes.ok) throw new Error('Unauthorized');
+                const user = await userRes.json();
+                const content = await contentRes.json();
+                renderDashboard(user, content);
             } catch (err) {
-                console.error(err);
                 localStorage.removeItem('token');
                 window.location.href = 'login.html';
             }
+        }
+
+        function renderDashboard(user, content) {
+            // Navbar & Welcome
+            document.getElementById('nav-user-name').textContent = user.name;
+            document.getElementById('welcome-name').textContent = user.name.split(' ')[0];
+            
+            // Profile Card Labels & Dynamic Data
+            document.getElementById('profile-card-title').textContent = content.profile.title;
+            document.getElementById('label-name').textContent = content.profile.labels.name;
+            document.getElementById('profile-name').textContent = user.name;
+            document.getElementById('label-email').textContent = content.profile.labels.email;
+            document.getElementById('profile-email').textContent = user.email;
+            document.getElementById('label-member-since').textContent = content.profile.labels.member_since;
+            document.getElementById('profile-date').textContent = new Date(user.created_at).toLocaleDateString();
+            document.getElementById('profile-role-label').textContent = content.profile.role_label;
+            document.getElementById('profile-role-value').textContent = content.profile.default_role;
+            document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
+
+            // Welcome Card
+            document.getElementById('welcome-title').textContent = content.dashboard.welcome.title;
+            document.getElementById('welcome-desc').textContent = content.dashboard.welcome.description;
+
+            // Stats (Static Structure)
+            document.getElementById('stat-0-label').textContent = content.dashboard.stats[0].label;
+            document.getElementById('stat-0-value').textContent = content.dashboard.stats[0].value;
+            document.getElementById('stat-1-label').textContent = content.dashboard.stats[1].label;
+            document.getElementById('stat-1-value').textContent = content.dashboard.stats[1].value;
+            document.getElementById('stat-2-label').textContent = content.dashboard.stats[2].label;
+            document.getElementById('stat-2-value').textContent = content.dashboard.stats[2].value;
+
+            // Links (Static Structure)
+            document.getElementById('link-0-title').textContent = content.dashboard.quick_links[0].title;
+            document.getElementById('link-0-desc').textContent = content.dashboard.quick_links[0].description;
+            document.getElementById('link-0-url').href = content.dashboard.quick_links[0].url;
+            document.getElementById('link-0-icon').textContent = content.dashboard.quick_links[0].icon;
+
+            document.getElementById('link-1-title').textContent = content.dashboard.quick_links[1].title;
+            document.getElementById('link-1-desc').textContent = content.dashboard.quick_links[1].description;
+            document.getElementById('link-1-url').href = content.dashboard.quick_links[1].url;
+            document.getElementById('link-1-icon').textContent = content.dashboard.quick_links[1].icon;
+
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.remove('hidden');
         }
 
         async function logout() {
             try {
-                await fetch(`${API_URL}/logout`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    }
-                });
-            } catch (err) {
-                console.error('Logout error:', err);
+                await fetch(`${API_URL}/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } });
             } finally {
                 localStorage.removeItem('token');
-                localStorage.removeItem('user');
                 window.location.href = 'login.html';
             }
         }
-
-        fetchUser();
+        init();
     </script>
 </body>
 </html>
