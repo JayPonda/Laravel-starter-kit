@@ -14,7 +14,9 @@ class FileController extends Controller
      */
     public function index()
     {
-        $files = Auth::user()->files()->paginate(15);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $files = $user->files()->paginate(15);
         return response()->json($files);
     }
 
@@ -39,7 +41,9 @@ class FileController extends Controller
         ]);
 
         // Attach to user as owner
-        Auth::user()->files()->attach($file->id, ['permission' => 'owner']);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->files()->attach($file->id, ['permission' => 'owner']);
 
         return response()->json([
             'message' => 'File uploaded successfully',
@@ -74,7 +78,9 @@ class FileController extends Controller
      */
     protected function authorizeAccess(File $file, $requiredPermission = null)
     {
-        $userFile = Auth::user()->files()->where('file_id', $file->id)->first();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $userFile = $user->files()->where('file_id', $file->id)->first();
 
         if (!$userFile) {
             abort(403, 'Unauthorized access to this file.');
@@ -85,4 +91,3 @@ class FileController extends Controller
         }
     }
 }
-EOD;

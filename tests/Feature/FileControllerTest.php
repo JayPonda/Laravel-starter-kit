@@ -95,7 +95,48 @@ class FileControllerTest extends TestCase
         $response = $this->actingAs($stranger, 'sanctum')
             ->getJson("/api/files/{$file->id}");
 
-        $response->assertStatus(403);
+        $response->assertStatus(403)
+            ->assertJsonPath('message', 'Unauthorized access to this file.');
+    }
+
+    public function test_user_can_view_authorized_file()
+    {
+        $user = User::factory()->create();
+        $file = File::create([
+            'original_name' => 'shared.pdf',
+            'path' => 'uploads/shared.pdf',
+            'mime_type' => 'application/pdf',
+            'size' => 100,
+        ]);
+        $user->files()->attach($file->id, ['permission' => 'viewer']);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/files/{$file->id}");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('original_name', 'shared.pdf');
+    }
+
+    public function test_user_cannot_delete_with_viewer_permission()
+    {
+        $owner = User::factory()->create();
+        $viewer = User::factory()->create();
+
+        $file = File::create([
+            'original_name' => 'protected.jpg',
+            'path' => 'uploads/protected.jpg',
+            'mime_type' => 'image/jpeg',
+            'size' => 100,
+        ]);
+        
+        $owner->files()->attach($file->id, ['permission' => 'owner']);
+        $viewer->files()->attach($file->id, ['permission' => 'viewer']);
+
+        $response = $this->actingAs($viewer, 'sanctum')
+            ->deleteJson("/api/files/{$file->id}");
+
+        $response->assertStatus(403)
+            ->assertJsonPath('message', 'You do not have the required permissions.');
     }
 
     public function test_only_owner_can_delete_file()
