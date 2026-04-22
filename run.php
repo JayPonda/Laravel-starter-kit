@@ -34,9 +34,8 @@ if ($shouldInstall) {
     runCommand('npm install', 'Installing NPM Dependencies locally');
 }
 
-// 4. Generate MySQL and Redis configs (Docker volumes depend on these)
+// 4. Generate MySQL config (Docker volumes depend on this)
 runCommand('php setup/generate-db-sql.php', 'Generating MySQL Config');
-runCommand('php setup/generate-redis-conf.php', 'Generating Redis Config');
 
 // 5. Start Sail
 runCommand("$SAIL up -d", 'Starting Laravel Sail Containers');

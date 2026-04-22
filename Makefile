@@ -69,6 +69,5 @@ model: ## Generate model + migration + factory + seeder (usage: make model name=
 ini-pull: ## (Recovery) Copy php.ini from container to local docker/8.3/php.ini
 	docker compose cp backend:/etc/php/8.3/cli/conf.d/99-sail.ini ./docker/8.3/php.ini
 
-config: ## Generate MySQL and Redis configurations (used by Docker volumes)
+config: ## Generate MySQL configuration (used by Docker volumes)
 	php setup/generate-db-sql.php
-	php setup/generate-redis-conf.php
