@@ -19,7 +19,6 @@
 /storage/*.key
 /storage/pail
 /storage/database.sql
-/storage/redis.conf
 /vendor
 _ide_helper.php
 Homestead.json
@@ -27,4 +26,3 @@ Homestead.yaml
 Thumbs.db
 
 database.sql
-redis.conf

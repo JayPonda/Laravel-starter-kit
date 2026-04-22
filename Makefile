@@ -38,9 +38,8 @@ setup: install config ## Initial project setup
 	php artisan migrate
 	@echo "Setup complete. Run 'make up' to start services and 'make serve' for the app."
 
-config: ## Generate MySQL and Redis configurations
+config: ## Generate MySQL configuration
 	php setup/generate-db-sql.php
-	php setup/generate-redis-conf.php
 
 shell: ## Open a bash shell
 	bash

@@ -23,10 +23,9 @@ $templateDir = __DIR__;
 // Load environment
 $env = getAppEnv();
 
-// 1. & 2. Generate MySQL and Redis configs
-// These need to run first as Docker depends on them (via volumes)
+// 1. Generate MySQL config
+// This needs to run first as Docker depends on it (via volumes)
 runCommand('php setup/generate-db-sql.php', 'Generating MySQL Config');
-runCommand('php setup/generate-redis-conf.php', 'Generating Redis Config');
 
 // 3. Start Docker
 runCommand('docker compose up -d', 'Starting Docker Containers');
