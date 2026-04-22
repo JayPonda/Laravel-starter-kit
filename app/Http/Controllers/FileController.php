@@ -32,9 +32,17 @@ class FileController extends Controller
             return $file->pivot->permission !== 'owner';
         });
 
+        $editableFiles = $allFiles->filter(function ($file) {
+            return in_array($file->pivot->permission, ['owner', 'editor']);
+        });
+
+        $viewOnlyFiles = $allFiles->filter(function ($file) {
+            return $file->pivot->permission === 'viewer';
+        });
+
         $users = \App\Models\User::where('id', '!=', $user->id)->get();
 
-        return view('files.index', compact('myFiles', 'sharedFiles', 'users'));
+        return view('files.index', compact('myFiles', 'sharedFiles', 'editableFiles', 'viewOnlyFiles', 'users'));
     }
 
     /**

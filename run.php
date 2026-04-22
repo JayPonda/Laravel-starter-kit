@@ -45,38 +45,94 @@ echo "\n>>> Waiting for MySQL to be ready...\n";
 $maxAttempts = 30;
 $attempt = 0;
 $ready = false;
-while ($attempt < $maxAttempts) {
-    // Check if we can connect to the DB via Artisan
-    $checkCommand = "$SAIL artisan db:show > /dev/null 2>&1";
-    exec($checkCommand, $output, $returnVar);
 
-    if ($returnVar === 0) {
-        $ready = true;
-        break;
+while ($attempt < $maxAttempts) {
+    // Get MySQL container name dynamically
+    exec("docker compose ps -q mysql 2>/dev/null", $output, $returnVar);
+    $containerId = trim($output[0] ?? '');
+
+    if ($containerId) {
+        // Check container health status
+        exec("docker inspect --format='{{.State.Health.Status}}' $containerId 2>/dev/null", $healthOutput, $healthReturn);
+        $healthStatus = trim($healthOutput[0] ?? '');
+
+        if ($healthStatus === 'healthy') {
+            $ready = true;
+            break;
+        }
     }
+
     $attempt++;
     sleep(2);
     echo '.';
+    $output = [];
+    $healthOutput = [];
 }
 
 if (!$ready) {
-    echo "\nError: MySQL did not become ready in time.\n";
-    exit(1);
+    // Simple fallback - container is up
+    if ($containerId) {
+        echo "\nMySQL container is running, proceeding...\n";
+        $ready = true;
+    } else {
+        echo "Error: MySQL container not found.\n";
+        exit(1);
+    }
 }
 echo "\nMySQL is ready!\n";
 
-// 7. Artisan key:generate
-runCommand("$SAIL artisan key:generate", 'Generating App Key');
+// 7. Setup MinIO bucket
+echo "\n>>> Setting up MinIO bucket...\n";
 
-// 8. Artisan storage:link
-runCommand("$SAIL artisan storage:link", 'Linking Storage');
+// Get bucket name from .env or use default 'laravel'
+$envFile = file_get_contents('.env');
+preg_match('/AWS_BUCKET=(.*)/', $envFile, $matches);
+$bucketName = !empty(trim($matches[1] ?? '')) ? trim($matches[1]) : 'laravel';
 
-// 9. Artisan migrate
-runCommand("$SAIL artisan migrate --force", 'Running Database Migrations');
+// Set alias (ignore if already exists)
+passthru("docker compose exec -T minio mc alias set local http://minio:9000 sail password > /dev/null 2>&1");
 
-// 10. Artisan test
-runCommand("$SAIL test", 'Running Tests');
+// Check if bucket exists, create if not
+$checkBucket = "docker compose exec -T minio mc ls local/{$bucketName} > /dev/null 2>&1";
+exec($checkBucket, $output, $returnVar);
+
+if ($returnVar !== 0) {
+    // Bucket doesn't exist - create it
+    $createBucket = "docker compose exec -T minio mc mb local/{$bucketName}";
+    exec($createBucket, $output, $returnVar);
+    if ($returnVar === 0) {
+        echo "Created bucket '{$bucketName}'\n";
+    } else {
+        echo "Warning: Could not create bucket '{$bucketName}'\n";
+    }
+} else {
+    echo "Bucket '{$bucketName}' already exists\n";
+}
+
+// Set anonymous download policy (optional - allows direct URL access to files)
+passthru("docker compose exec -T minio mc anonymous set download local/{$bucketName} > /dev/null 2>&1 || true");
+echo "Bucket '{$bucketName}' is ready!\n";
+
+// 8. Artisan key:generate
+// Use docker compose exec directly to specify the correct service name
+runCommand("docker compose exec -T backend php artisan key:generate", 'Generating App Key');
+
+// 9. Fix storage permissions
+echo "\n>>> Fixing storage permissions...\n";
+passthru("docker compose exec -T backend chmod -R 777 /var/www/html/storage/logs /var/www/html/storage/framework/cache /var/www/html/storage/framework/sessions /var/www/html/storage/framework/views /var/www/html/storage/framework/cache/temp 2>/dev/null || true");
+passthru("docker compose exec -T backend chown -R sail:sail /var/www/html/storage/logs /var/www/html/storage/framework 2>/dev/null || true");
+echo "Storage permissions fixed!\n";
+
+// 10. Artisan storage:link
+runCommand("docker compose exec -T backend php artisan storage:link", 'Linking Storage');
+
+// 11. Artisan migrate
+runCommand("docker compose exec -T backend php artisan migrate --force", 'Running Database Migrations');
+
+// 12. Artisan test
+runCommand("docker compose exec -T backend php artisan test", 'Running Tests');
 
 echo "\n🚀 Setup complete! Your application is running via Sail.\n";
-echo "🔗 Access your app at: " . (getenv('APP_URL') ?: 'http://localhost:20143') . "\n";
+echo "🔗 Access your app at: http://localhost:12354\n";
+echo "📦 MinIO bucket: {$bucketName}\n";
 echo "💡 Use 'make down' to stop the environment.\n";

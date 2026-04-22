@@ -11,7 +11,7 @@
     <!-- Upload Section -->
     <div class="card">
         <h2>Upload New File</h2>
-        <form action="{{ route('files.store') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+        <form action="{{ route('web.files.store') }}" method="POST" enctype="multipart/form-data" class="upload-form">
             @csrf
             <div class="form-group">
                 <input type="file" name="file" required>
@@ -64,10 +64,10 @@
                         <button type="button" class="btn btn-primary btn-small" onclick="openShareModal({{ $file->id }}, '{{ $file->original_name }}')">
                             Add User
                         </button>
-                        <a href="{{ route('files.show', $file) }}" class="btn btn-primary btn-small">
+                        <a href="{{ route('web.files.show', $file) }}" class="btn btn-primary btn-small">
                             Download
                         </a>
-                        <form action="{{ route('files.destroy', $file) }}" method="POST" onsubmit="return confirm('Are you sure?')" class="d-inline">
+                        <form action="{{ route('web.files.destroy', $file) }}" method="POST" onsubmit="return confirm('Are you sure?')" class="d-inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-small">
@@ -98,7 +98,7 @@
                             <p class="text-small">{{ number_format($file->size / 1024, 2) }} KB | {{ $file->pivot->permission }}</p>
                         </div>
                     </div>
-                    <a href="{{ route('files.show', $file) }}" class="btn btn-primary btn-small">
+                    <a href="{{ route('web.files.show', $file) }}" class="btn btn-primary btn-small">
                         Download
                     </a>
                 </div>

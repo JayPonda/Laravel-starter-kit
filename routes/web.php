@@ -23,9 +23,10 @@ Route::middleware('auth')->group(function () {
         return view('dashboard', compact('files'));
     })->name('dashboard');
 
-    Route::get('/files', [\App\Http\Controllers\FileController::class, 'index'])->name('files.index');
-    Route::post('/files', [\App\Http\Controllers\FileController::class, 'store'])->name('files.store');
-    Route::post('/files/{file}/share', [\App\Http\Controllers\FileController::class, 'share'])->name('files.share');
-    Route::delete('/files/{file}/share/{user}', [\App\Http\Controllers\FileController::class, 'unshare'])->name('files.unshare');
-    Route::delete('/files/{file}', [\App\Http\Controllers\FileController::class, 'destroy'])->name('files.destroy');
+    Route::get('/files', [\App\Http\Controllers\FileController::class, 'index'])->name('web.files.index');
+    Route::post('/files', [\App\Http\Controllers\FileController::class, 'store'])->name('web.files.store');
+    Route::get('/files/{file}', [\App\Http\Controllers\FileController::class, 'show'])->name('web.files.show');
+    Route::post('/files/{file}/share', [\App\Http\Controllers\FileController::class, 'share'])->name('web.files.share');
+    Route::delete('/files/{file}/share/{user}', [\App\Http\Controllers\FileController::class, 'unshare'])->name('web.files.unshare');
+    Route::delete('/files/{file}', [\App\Http\Controllers\FileController::class, 'destroy'])->name('web.files.destroy');
 });

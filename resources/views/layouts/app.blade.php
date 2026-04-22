@@ -11,7 +11,7 @@
     <nav class="navbar">
         <a href="{{ route('dashboard') }}" class="navbar-brand">Laravel Boilerplate</a>
         <div class="user-nav">
-            <a href="{{ route('files.index') }}" class="logout-link">My Files</a>
+            <a href="{{ route('web.files.index') }}" class="logout-link">My Files</a>
             <span class="user-name">{{ Auth::user()->name }}</span>
             <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                 @csrf
