@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\WebAuthController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HealthCheckController::class, 'index'])->name('health');
@@ -18,7 +19,7 @@ Route::post('logout', [WebAuthController::class, 'logout'])->name('logout')->mid
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         /** @var \App\Models\User $user */
-        $user = auth()->user();
+        $user = Auth::user();
         $files = $user->files()->wherePivot('permission', 'owner')->latest()->take(5)->get();
         return view('dashboard', compact('files'));
     })->name('dashboard');
