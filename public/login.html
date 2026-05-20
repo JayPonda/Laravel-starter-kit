@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Laravel Boilerplate</title>
-    <link rel="stylesheet" href="styleguild.css">
+    <link rel="stylesheet" href="app.css">
 </head>
 <body>
     <nav class="navbar">
-        <a href="index.html" class="navbar-brand">Laravel Boilerplate</a>
+        <a href="index.html" class="navbar-brand font-bold">Laravel Boilerplate</a>
         <div class="user-nav">
             <a href="register.html" class="link">Register</a>
         </div>
@@ -21,13 +21,15 @@
 
             <form id="login-form">
                 <div class="form-group">
-                    <label>Email</label>
+                    <label class="font-bold">Email</label>
                     <input type="email" name="email" required>
                 </div>
                 <div class="form-group">
-                    <label>Password</label>
+                    <label class="font-bold">Password</label>
                     <input type="password" name="password" required>
-                    <span class="password-toggle" onclick="togglePassword(this)">Show</span>
+                    <label style="font-weight: normal; cursor: pointer;">
+                        <input type="checkbox" onclick="togglePassword(this)" style="width: auto;"> Show Password
+                    </label>
                 </div>
                 <button type="submit">Login</button>
                 <div class="divider">
@@ -38,11 +40,11 @@
             <form id="reset-form" class="hidden">
                 <p class="divider">Enter your email and old password to reset.</p>
                 <div class="form-group">
-                    <label>Email</label>
+                    <label class="font-bold">Email</label>
                     <input type="email" name="email" required>
                 </div>
                 <div class="form-group">
-                    <label>Old Password</label>
+                    <label class="font-bold">Old Password</label>
                     <input type="password" name="old_password" required>
                 </div>
                 <button type="submit">Reset Password</button>
@@ -60,9 +62,9 @@
     <script>
         const API_URL = window.location.origin.replace(':8081', ':12354') + '/api';
         function togglePassword(el) {
-            const input = el.parentElement.querySelector('input');
-            input.type = input.type === 'password' ? 'text' : 'password';
-            el.textContent = input.type === 'password' ? 'Show' : 'Hide';
+            const container = el.parentElement.parentElement;
+            const input = container.querySelector('input[type="password"], input[type="text"]');
+            input.type = el.checked ? 'text' : 'password';
         }
         function showReset() {
             document.getElementById('login-form').classList.add('hidden');
