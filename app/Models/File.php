@@ -4,9 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class File extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'original_name',
         'path',
@@ -20,5 +24,10 @@ class File extends Model
         return $this->belongsToMany(User::class)
             ->withPivot('permission')
             ->withTimestamps();
+    }
+
+    public function fileRemovals(): HasMany
+    {
+        return $this->hasMany(FileRemoval::class);
     }
 }

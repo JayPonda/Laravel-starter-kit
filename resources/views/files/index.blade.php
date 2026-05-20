@@ -35,50 +35,53 @@
         </div>
         <p class="text-small">Files you have uploaded.</p>
         <div class="action-list mt-4">
-            @forelse($myFiles as $file)
-                <div class="action-item flex-between-center">
-                    <div class="flex-center flex-1">
-                        <div class="action-icon">📄</div>
-                        <div>
-                            <strong>{{ $file->original_name }}</strong>
-                            <p class="text-small">{{ number_format($file->size / 1024, 2) }} KB | {{ $file->created_at->diffForHumans() }}</p>
-                            
-                            @php
-                                $sharedWith = $file->users->where('id', '!=', Auth::id());
-                            @endphp
-                            @if($sharedWith->count() > 0)
-                                <div class="mt-2">
-                                    <p class="text-small" style="color: #0066cc;">Shared with (click to edit): 
-                                        @foreach($sharedWith as $sharedUser)
-                                            <span class="status-badge status-loading" style="margin: 0 2px; padding: 2px 6px; font-size: 10px; cursor: pointer;" 
-                                                  onclick="openShareModal({{ $file->id }}, '{{ $file->original_name }}', {{ $sharedUser->id }}, '{{ $sharedUser->pivot->permission }}')">
-                                                {{ $sharedUser->name }} ({{ $sharedUser->pivot->permission }})
-                                            </span>
-                                        @endforeach
-                                    </p>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="user-nav flex-gap-2">
-                        <button type="button" class="btn btn-primary btn-small" onclick="openShareModal({{ $file->id }}, '{{ $file->original_name }}')">
-                            Add User
-                        </button>
-                        <a href="{{ route('web.files.show', $file) }}" class="btn btn-primary btn-small">
-                            Download
-                        </a>
-                        <form action="{{ route('web.files.destroy', $file) }}" method="POST" onsubmit="return confirm('Are you sure?')" class="d-inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-small">
-                                Delete
-                            </button>
-                        </form>
-                    </div>
+@forelse($myFiles as $file)
+<div class="action-item flex-between-center">
+    <div class="flex-center flex-1">
+        <div class="action-icon">📄</div>
+        <div>
+            <strong>{{ $file->original_name }}</strong>
+            <p class="text-small">{{ number_format($file->size / 1024, 2) }} KB | {{ $file->created_at->diffForHumans() }}</p>
+            
+            @php
+                $sharedWith = $file->users->where('id', '!=', Auth::id());
+            @endphp
+            @if($sharedWith->count() > 0)
+                <div class="mt-2">
+                    <p class="text-small" style="color: #0066cc;">Shared with (click to edit): 
+                        @foreach($sharedWith as $sharedUser)
+                            <span class="status-badge status-loading" style="margin: 0 2px; padding: 2px 6px; font-size: 10px; cursor: pointer;" 
+                                  onclick="openShareModal({{ $file->id }}, '{{ $file->original_name }}', {{ $sharedUser->id }}, '{{ $sharedUser->pivot->permission }}')">
+                                {{ $sharedUser->name }} ({{ $sharedUser->pivot->permission }})
+                            </span>
+                        @endforeach
+                    </p>
                 </div>
-            @empty
-                <p class="text-muted">No files found.</p>
-            @endforelse
+            @endif
+        </div>
+    </div>
+    <div class="user-nav flex-gap-2">
+        <button type="button" class="btn btn-primary btn-small" onclick="openShareModal({{ $file->id }}, '{{ $file->original_name }}')">
+            Add User
+        </button>
+        <a href="{{ route('web.files.edit', $file) }}" class="btn btn-secondary btn-small">
+            Edit
+        </a>
+        <a href="{{ route('web.files.show', $file) }}" class="btn btn-primary btn-small">
+            Download
+        </a>
+        <form action="{{ route('web.files.destroy', $file) }}" method="POST" onsubmit="return confirm('Are you sure?')" class="d-inline">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger btn-small">
+                Delete
+            </button>
+        </form>
+    </div>
+</div>
+@empty
+    <p class="text-small text-muted">No files uploaded yet.</p>
+@endforelse
         </div>
     </div>
 
@@ -89,22 +92,29 @@
         </div>
         <p class="text-small">Files shared with you by others.</p>
         <div class="action-list mt-4">
-            @forelse($sharedFiles as $file)
-                <div class="action-item flex-between-center">
-                    <div class="flex-center flex-1">
-                        <div class="action-icon">👁️</div>
-                        <div>
-                            <strong>{{ $file->original_name }}</strong>
-                            <p class="text-small">{{ number_format($file->size / 1024, 2) }} KB | {{ $file->pivot->permission }}</p>
-                        </div>
-                    </div>
-                    <a href="{{ route('web.files.show', $file) }}" class="btn btn-primary btn-small">
-                        Download
-                    </a>
-                </div>
-            @empty
-                <p class="text-muted">No shared files found.</p>
-            @endforelse
+@forelse($sharedFiles as $file)
+<div class="action-item flex-between-center">
+    <div class="flex-center flex-1">
+        <div class="action-icon">👁️</div>
+        <div>
+            <strong>{{ $file->original_name }}</strong>
+            <p class="text-small">{{ number_format($file->size / 1024, 2) }} KB | {{ $file->pivot->permission }}</p>
+        </div>
+    </div>
+    <div class="user-nav flex-gap-2">
+        @if(in_array($file->pivot->permission, ['owner', 'editor']))
+            <a href="{{ route('web.files.edit', $file) }}" class="btn btn-secondary btn-small">
+                Edit
+            </a>
+        @endif
+        <a href="{{ route('web.files.show', $file) }}" class="btn btn-primary btn-small">
+            Download
+        </a>
+    </div>
+</div>
+@empty
+    <p class="text-small text-muted">No files shared with you yet.</p>
+@endforelse
         </div>
     </div>
 </div>

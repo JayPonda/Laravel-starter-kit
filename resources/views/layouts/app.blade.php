@@ -20,7 +20,7 @@
         </div>
     </nav>
 
-    <div class="main-container">
+    <div class="main-container @yield('container_class')">
         @yield('content')
     </div>
 </body>
