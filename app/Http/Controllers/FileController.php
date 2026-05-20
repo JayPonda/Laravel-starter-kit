@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
+use App\Models\FileRemoval;
+use App\Jobs\CleanupFileJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -88,6 +90,57 @@ class FileController extends Controller
         }
 
         return redirect()->back()->with('success', 'File uploaded successfully!');
+    }
+
+    /**
+     * Edit file in browser
+     */
+    public function edit(File $file)
+    {
+        $this->authorizeAccess($file, ['owner', 'editor']);
+
+        if (!Storage::disk($file->disk)->exists($file->path)) {
+            abort(404, 'File not found on storage.');
+        }
+
+        $content = Storage::disk($file->disk)->get($file->path);
+        $extension = pathinfo($file->original_name, PATHINFO_EXTENSION);
+
+        return view('files.edit', compact('file', 'content', 'extension'));
+    }
+
+    /**
+     * Update file content
+     */
+    public function update(Request $request, File $file)
+    {
+        $this->authorizeAccess($file, ['owner', 'editor']);
+
+        $request->validate([
+            'content' => 'required|string',
+        ]);
+
+        // Store old path for cleanup
+        $oldPath = $file->path;
+        
+        // Update file with new content
+        Storage::disk($file->disk)->put($file->path, $request->input('content'));
+
+        // Create removal record for old file version
+        $fileRemoval = FileRemoval::create([
+            'file_id' => $file->id,
+            'old_path' => $oldPath,
+            'status' => FileRemoval::STATUS_PENDING,
+        ]);
+
+        // Dispatch cleanup job
+        CleanupFileJob::dispatch($fileRemoval);
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'File saved successfully']);
+        }
+
+        return redirect()->back()->with('success', 'File saved successfully!');
     }
 
     /**
@@ -192,8 +245,11 @@ class FileController extends Controller
             abort(403, 'Unauthorized access to this file.');
         }
 
-        if ($requiredPermission && $userFile->pivot->permission !== $requiredPermission) {
-            abort(403, 'You do not have the required permissions.');
+        if ($requiredPermission) {
+            $permissions = is_array($requiredPermission) ? $requiredPermission : [$requiredPermission];
+            if (!in_array($userFile->pivot->permission, $permissions)) {
+                abort(403, 'You do not have the required permissions.');
+            }
         }
     }
 }

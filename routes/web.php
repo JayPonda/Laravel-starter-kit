@@ -26,6 +26,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/files', [\App\Http\Controllers\FileController::class, 'index'])->name('web.files.index');
     Route::post('/files', [\App\Http\Controllers\FileController::class, 'store'])->name('web.files.store');
     Route::get('/files/{file}', [\App\Http\Controllers\FileController::class, 'show'])->name('web.files.show');
+    Route::get('/files/{file}/edit', [\App\Http\Controllers\FileController::class, 'edit'])->name('web.files.edit');
+    Route::put('/files/{file}', [\App\Http\Controllers\FileController::class, 'update'])->name('web.files.update');
     Route::post('/files/{file}/share', [\App\Http\Controllers\FileController::class, 'share'])->name('web.files.share');
     Route::delete('/files/{file}/share/{user}', [\App\Http\Controllers\FileController::class, 'unshare'])->name('web.files.unshare');
     Route::delete('/files/{file}', [\App\Http\Controllers\FileController::class, 'destroy'])->name('web.files.destroy');

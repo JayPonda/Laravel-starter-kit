@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class File extends Model
 {
@@ -20,5 +21,10 @@ class File extends Model
         return $this->belongsToMany(User::class)
             ->withPivot('permission')
             ->withTimestamps();
+    }
+
+    public function fileRemovals(): HasMany
+    {
+        return $this->hasMany(FileRemoval::class);
     }
 }

@@ -197,6 +197,15 @@ button:disabled { background: #ccc; cursor: not-allowed; }
     background: #dc2626;
 }
 
+.btn-secondary {
+    background: #6b7280;
+    color: white !important;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
 .btn-small {
     padding: 4px 8px;
     font-size: 12px;

@@ -193,11 +193,14 @@
 
                     actions = `
                         <button onclick="openShareModal(${file.id}, '${file.original_name.replace(/'/g, "\\'")}')" class="btn btn-primary btn-small mr-2">Add User</button>
+                        <button onclick="editFile(${file.id})" class="btn btn-secondary btn-small mr-2">Edit</button>
                         <button onclick="downloadFile(${file.id}, '${file.original_name.replace(/'/g, "\\'")}')" class="btn btn-primary btn-small mr-2">Download</button>
                         <button onclick="deleteFile(${file.id})" class="btn btn-danger btn-small">Delete</button>
                     `;
                 } else {
+                    const canEdit = permission === 'editor';
                     actions = `
+                        ${canEdit ? `<button onclick="editFile(${file.id})" class="btn btn-secondary btn-small mr-2">Edit</button>` : ''}
                         <button onclick="downloadFile(${file.id}, '${file.original_name.replace(/'/g, "\\'")}')" class="btn btn-primary btn-small">Download</button>
                     `;
                 }
