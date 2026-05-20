@@ -44,9 +44,9 @@ logs-fe: ## Stream raw Docker logs for the frontend container
 	docker compose logs -f frontend
 
 clear: ## Clear logs and cached configuration
-	docker compose exec backend php artisan log:clear
 	docker compose exec backend php artisan config:clear
-	docker compose exec backend php artisan cache:clear
+	docker compose exec backend php artisan cache:clear || true
+	docker compose exec backend php artisan view:clear
 
 test: ## Run tests inside Sail
 	docker compose exec backend php artisan test
@@ -59,6 +59,20 @@ tinker: ## Start a Laravel Tinker session
 
 bash: ## Run a command inside the container (usage: make bash cmd="ls -la")
 	docker compose exec backend /bin/bash -c "$(cmd)"
+
+url: ## Show all service URLs
+	@echo -e "\033[32mBackend: \033[0m http://localhost:$(shell sed -n 's/^APP_PORT=//p' .env | head -n 1 | grep . || echo 12354)"
+	@echo -e "\033[32mFrontend:\033[0m http://localhost:$(shell sed -n 's/^FORWARD_FRONTEND_PORT=//p' .env | head -n 1 | grep . || echo 8081)"
+	@echo -e "\033[32mDatabase:\033[0m mysql://$(shell sed -n 's/^DB_USERNAME=//p' .env | head -n 1):$(shell sed -n 's/^DB_PASSWORD=//p' .env | head -n 1)@127.0.0.1:$(shell sed -n 's/^FORWARD_DB_PORT=//p' .env | head -n 1 | grep . || echo 3311)/$(shell sed -n 's/^DB_DATABASE=//p' .env | head -n 1)"
+
+url-backend: ## Show Backend URL
+	@echo "http://localhost:$(shell sed -n 's/^APP_PORT=//p' .env | head -n 1 | grep . || echo 12354)"
+
+url-frontend: ## Show Frontend URL
+	@echo "http://localhost:$(shell sed -n 's/^FORWARD_FRONTEND_PORT=//p' .env | head -n 1 | grep . || echo 8081)"
+
+url-db: ## Show Database Connection String
+	@echo "mysql://$(shell sed -n 's/^DB_USERNAME=//p' .env | head -n 1):$(shell sed -n 's/^DB_PASSWORD=//p' .env | head -n 1)@127.0.0.1:$(shell sed -n 's/^FORWARD_DB_PORT=//p' .env | head -n 1 | grep . || echo 3311)/$(shell sed -n 's/^DB_DATABASE=//p' .env | head -n 1)"
 
 crud: ## Create a full CRUD stack (usage: make crud name=Post)
 	docker compose exec backend php artisan make:crud $(name)

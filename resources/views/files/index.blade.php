@@ -79,6 +79,8 @@
         </form>
     </div>
 </div>
+@empty
+    <p class="text-small text-muted">No files uploaded yet.</p>
 @endforelse
         </div>
     </div>
@@ -110,6 +112,8 @@
         </a>
     </div>
 </div>
+@empty
+    <p class="text-small text-muted">No files shared with you yet.</p>
 @endforelse
         </div>
     </div>
