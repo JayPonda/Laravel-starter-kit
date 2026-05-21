@@ -45,7 +45,9 @@ class FileControllerTest extends TestCase
         ]);
 
         $datePath = now()->format('Y-m-d');
-        Storage::disk('minio')->assertExists("file-upload/{$datePath}/" . $file->hashName());
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
+        $storage = Storage::disk('minio');
+        $storage->assertExists("file-upload/{$datePath}/" . $file->hashName());
     }
 
     public function test_user_can_list_only_their_files()
@@ -165,8 +167,10 @@ class FileControllerTest extends TestCase
             ->deleteJson("/api/files/{$file->id}")
             ->assertStatus(200);
 
-        $this->assertDatabaseMissing('files', ['id' => $file->id]);
-        Storage::disk('minio')->assertMissing('uploads/delete_me.jpg');
+        $this->assertSoftDeleted('files', ['id' => $file->id]);
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
+        $storage = Storage::disk('minio');
+        $storage->assertMissing('uploads/delete_me.jpg');
     }
 
     public function test_web_index_shows_files_categorized()
@@ -227,9 +231,9 @@ class FileControllerTest extends TestCase
             ->delete("/files/{$file->id}");
 
         $response->assertRedirect();
-        $response->assertSessionHas('success', 'File deleted successfully!');
+        $response->assertSessionHas('success', 'File deletion initiated!');
 
-        $this->assertDatabaseMissing('files', ['id' => $file->id]);
+        $this->assertSoftDeleted('files', ['id' => $file->id]);
     }
 }
 

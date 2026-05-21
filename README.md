@@ -129,10 +129,11 @@ app/
 | Service | Port (Internal) | Port (External) | Description |
 | :--- | :--- | :--- | :--- |
 | **Backend** | 80 | `12354` | Laravel 11.x (API/Blade) |
-| **Frontend** | 80 | `8081` | Standalone HTML (API Verification) |
-| **MySQL** | 3306 | `3311` | Database Storage |
-| **Redis** | 6379 | `6379` | Cache & Queue |
-| **MinIO** | 9000 | `9000` | S3-Compatible Object Storage |
+| **Frontend** | 80 | `18081` | Standalone HTML (API Verification) |
+| **MySQL** | 3306 | `33101` | Database Storage |
+| **Redis** | 6379 | `63079` | Cache & Queue |
+| **MinIO** | 9000 | `19000` | S3-Compatible Object Storage |
+| **MinIO Console** | 8900 | `18900` | MinIO Web Console |
 
 ---
 
@@ -155,6 +156,37 @@ php artisan test
 
 # Fix code style
 composer lint:fix
+```
+
+---
+
+## 🚨 Troubleshooting
+
+### `getaddrinfo for mysql failed: Name or service not known`
+
+If migrations fail with a DNS resolution error for the `mysql` hostname, the cause is almost always a **port conflict** from another Docker project. When a port is already in use, Docker silently fails to attach the container to the network, breaking inter-service DNS.
+
+**Symptoms:**
+```
+SQLSTATE[HY000] [2002] php_network_getaddresses: getaddrinfo for mysql failed
+```
+
+**Fix:**
+```bash
+# 1. Identify conflicting containers (common culprits: ports 3311, 6379, 8081, 9000)
+docker ps --format 'table {{.Names}}\t{{.Ports}}'
+
+# 2. Stop the conflicting containers
+docker stop <conflicting-container-name>
+
+# 3. Recreate the network and restart
+docker compose down && docker compose up -d
+
+# 4. Verify all containers share the same network
+docker ps --format 'table {{.Names}}\t{{.Networks}}'
+
+# 5. Re-run migrations
+docker compose exec -T backend php artisan migrate --force
 ```
 
 ---

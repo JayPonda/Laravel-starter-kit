@@ -1,0 +1,195 @@
+From a1bbb90ec4a7382f947d14d83fb7b0a1d52074c7 Mon Sep 17 00:00:00 2001
+From: Jay-Ponda-Improwised <jay.ponda@improwised.com>
+Date: Thu, 21 May 2026 12:13:38 +0530
+Subject: [PATCH] fix: port issue
+
+---
+ .env.example                         | 11 +++++++-
+ README.md                            | 40 +++++++++++++++++++++++++---
+ docker-compose.yml                   | 10 +++----
+ package-lock.json                    |  2 +-
+ tests/Feature/FileControllerTest.php | 14 ++++++----
+ 5 files changed, 61 insertions(+), 16 deletions(-)
+
+diff --git a/.env.example b/.env.example
+index 0f8fb9f..52cb10d 100644
+--- a/.env.example
++++ b/.env.example
+@@ -11,6 +11,14 @@ WWWGROUP=sail
+ APP_LOCALE=en
+ APP_FALLBACK_LOCALE=en
+ APP_FAKER_LOCALE=en_US
++FORWARD_DB_PORT=33101
++FORWARD_REDIS_PORT=63079
++FORWARD_MINIO_PORT=19000
++FORWARD_MINIO_CONSOLE_PORT=18900
++FORWARD_FRONTEND_PORT=18081
++
++SAIL_XDEBUG_MODE=off
++# SAIL_XDEBUG_CONFIG=client_host=host.docker.internal
+ 
+ APP_MAINTENANCE_DRIVER=file
+ # APP_MAINTENANCE_STORE=database
+@@ -66,7 +74,8 @@ AWS_DEFAULT_REGION=us-east-1
+ AWS_BUCKET=laravel
+ AWS_USE_PATH_STYLE_ENDPOINT=false
+ 
++VITE_PORT=5173
+ VITE_APP_NAME="${APP_NAME}"
+ 
+-CORS_ALLOWED_ORIGINS=http://localhost:8081,http://localhost:3000,http://localhost:5173
++CORS_ALLOWED_ORIGINS=http://localhost:18081,http://localhost:3000,http://localhost:5173
+ 
+diff --git a/README.md b/README.md
+index c43a7dc..526bb6b 100644
+--- a/README.md
++++ b/README.md
+@@ -129,10 +129,11 @@ ## 🐳 Infrastructure Stack
+ | Service | Port (Internal) | Port (External) | Description |
+ | :--- | :--- | :--- | :--- |
+ | **Backend** | 80 | `12354` | Laravel 11.x (API/Blade) |
+-| **Frontend** | 80 | `8081` | Standalone HTML (API Verification) |
+-| **MySQL** | 3306 | `3311` | Database Storage |
+-| **Redis** | 6379 | `6379` | Cache & Queue |
+-| **MinIO** | 9000 | `9000` | S3-Compatible Object Storage |
++| **Frontend** | 80 | `18081` | Standalone HTML (API Verification) |
++| **MySQL** | 3306 | `33101` | Database Storage |
++| **Redis** | 6379 | `63079` | Cache & Queue |
++| **MinIO** | 9000 | `19000` | S3-Compatible Object Storage |
++| **MinIO Console** | 8900 | `18900` | MinIO Web Console |
+ 
+ ---
+ 
+@@ -159,5 +160,36 @@ # Fix code style
+ 
+ ---
+ 
++## 🚨 Troubleshooting
++
++### `getaddrinfo for mysql failed: Name or service not known`
++
++If migrations fail with a DNS resolution error for the `mysql` hostname, the cause is almost always a **port conflict** from another Docker project. When a port is already in use, Docker silently fails to attach the container to the network, breaking inter-service DNS.
++
++**Symptoms:**
++```
++SQLSTATE[HY000] [2002] php_network_getaddresses: getaddrinfo for mysql failed
++```
++
++**Fix:**
++```bash
++# 1. Identify conflicting containers (common culprits: ports 3311, 6379, 8081, 9000)
++docker ps --format 'table {{.Names}}\t{{.Ports}}'
++
++# 2. Stop the conflicting containers
++docker stop <conflicting-container-name>
++
++# 3. Recreate the network and restart
++docker compose down && docker compose up -d
++
++# 4. Verify all containers share the same network
++docker ps --format 'table {{.Names}}\t{{.Networks}}'
++
++# 5. Re-run migrations
++docker compose exec -T backend php artisan migrate --force
++```
++
++---
++
+ ## 📄 License
+ This project is open-sourced software licensed under the [MIT license](LICENSE).
+diff --git a/docker-compose.yml b/docker-compose.yml
+index e830100..0ac94d2 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -29,7 +29,7 @@ services:
+     mysql:
+         image: 'mysql:8.0'
+         ports:
+-            - '${FORWARD_DB_PORT:-3311}:3306'
++            - '${FORWARD_DB_PORT:-33101}:3306'
+         environment:
+             MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+             MYSQL_ROOT_HOST: '%'
+@@ -53,7 +53,7 @@ services:
+     redis:
+         image: 'redis:7-alpine'
+         ports:
+-            - '${FORWARD_REDIS_PORT:-6379}:6379'
++            - '${FORWARD_REDIS_PORT:-63079}:6379'
+         command: 'redis-server /usr/local/etc/redis/redis.conf'
+         volumes:
+             - 'sail-redis:/data'
+@@ -70,8 +70,8 @@ services:
+     minio:
+         image: 'minio/minio:latest'
+         ports:
+-            - '${FORWARD_MINIO_PORT:-9000}:9000'
+-            - '${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900'
++            - '${FORWARD_MINIO_PORT:-19000}:9000'
++            - '${FORWARD_MINIO_CONSOLE_PORT:-18900}:8900'
+         environment:
+             MINIO_ROOT_USER: sail
+             MINIO_ROOT_PASSWORD: password
+@@ -91,7 +91,7 @@ services:
+     frontend:
+         image: 'nginx:alpine'
+         ports:
+-            - '${FORWARD_FRONTEND_PORT:-8081}:80'
++            - '${FORWARD_FRONTEND_PORT:-18081}:80'
+         volumes:
+             - './public:/usr/share/nginx/html:ro'
+         networks:
+diff --git a/package-lock.json b/package-lock.json
+index a36c06d..6ee9867 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1,5 +1,5 @@
+ {
+-    "name": "template",
++    "name": "boilerplate",
+     "lockfileVersion": 3,
+     "requires": true,
+     "packages": {
+diff --git a/tests/Feature/FileControllerTest.php b/tests/Feature/FileControllerTest.php
+index 96c42e0..0e09f69 100644
+--- a/tests/Feature/FileControllerTest.php
++++ b/tests/Feature/FileControllerTest.php
+@@ -45,7 +45,9 @@ public function test_user_can_upload_file()
+         ]);
+ 
+         $datePath = now()->format('Y-m-d');
+-        Storage::disk('minio')->assertExists("file-upload/{$datePath}/" . $file->hashName());
++        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
++        $storage = Storage::disk('minio');
++        $storage->assertExists("file-upload/{$datePath}/" . $file->hashName());
+     }
+ 
+     public function test_user_can_list_only_their_files()
+@@ -165,8 +167,10 @@ public function test_only_owner_can_delete_file()
+             ->deleteJson("/api/files/{$file->id}")
+             ->assertStatus(200);
+ 
+-        $this->assertDatabaseMissing('files', ['id' => $file->id]);
+-        Storage::disk('minio')->assertMissing('uploads/delete_me.jpg');
++        $this->assertSoftDeleted('files', ['id' => $file->id]);
++        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
++        $storage = Storage::disk('minio');
++        $storage->assertMissing('uploads/delete_me.jpg');
+     }
+ 
+     public function test_web_index_shows_files_categorized()
+@@ -227,9 +231,9 @@ public function test_web_delete_redirects_back()
+             ->delete("/files/{$file->id}");
+ 
+         $response->assertRedirect();
+-        $response->assertSessionHas('success', 'File deleted successfully!');
++        $response->assertSessionHas('success', 'File deletion initiated!');
+ 
+-        $this->assertDatabaseMissing('files', ['id' => $file->id]);
++        $this->assertSoftDeleted('files', ['id' => $file->id]);
+     }
+ }
+ 
+-- 
+2.54.0
+

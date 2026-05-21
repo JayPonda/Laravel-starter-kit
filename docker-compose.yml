@@ -29,7 +29,7 @@ services:
     mysql:
         image: 'mysql:8.0'
         ports:
-            - '${FORWARD_DB_PORT:-3311}:3306'
+            - '${FORWARD_DB_PORT:-33101}:3306'
         environment:
             MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
             MYSQL_ROOT_HOST: '%'
@@ -53,7 +53,7 @@ services:
     redis:
         image: 'redis:7-alpine'
         ports:
-            - '${FORWARD_REDIS_PORT:-6379}:6379'
+            - '${FORWARD_REDIS_PORT:-63079}:6379'
         command: 'redis-server /usr/local/etc/redis/redis.conf'
         volumes:
             - 'sail-redis:/data'
@@ -70,8 +70,8 @@ services:
     minio:
         image: 'minio/minio:latest'
         ports:
-            - '${FORWARD_MINIO_PORT:-9000}:9000'
-            - '${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900'
+            - '${FORWARD_MINIO_PORT:-19000}:9000'
+            - '${FORWARD_MINIO_CONSOLE_PORT:-18900}:8900'
         environment:
             MINIO_ROOT_USER: sail
             MINIO_ROOT_PASSWORD: password
@@ -91,7 +91,7 @@ services:
     frontend:
         image: 'nginx:alpine'
         ports:
-            - '${FORWARD_FRONTEND_PORT:-8081}:80'
+            - '${FORWARD_FRONTEND_PORT:-18081}:80'
         volumes:
             - './public:/usr/share/nginx/html:ro'
         networks:
