@@ -37,13 +37,16 @@ Choose the setup path that best matches your local environment.
 
 ```bash
 # 1. Clone & Configure
-git clone <repo-url> boilerplate && cd boilerplate
+git clone https://github.com/JayPonda/Laravel-starter-kit boilerplate && cd boilerplate
 cp .env.example .env
 
-# 2. Automated Run
+# 2. Stop all the containers
+docker stop $(docker ps -q)
+
+# 3. Automated Run
 make run i=1
 
-# 3. Access
+# 4. Access
 # Standalone Frontend (API Verification): http://localhost:8081
 # Backend (Blade): http://localhost:12354
 ```
