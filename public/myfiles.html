@@ -98,6 +98,25 @@
 
     <script src="constants.js"></script>
     <script>
+        async function validateAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = 'login.html'; return false; }
+            try {
+                const res = await fetch(`${CONFIG.API_URL}/me`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                });
+                if (!res.ok) { localStorage.removeItem('token'); window.location.href = 'login.html'; return false; }
+            } catch { localStorage.removeItem('token'); window.location.href = 'login.html'; return false; }
+            return true;
+        }
+
+        window.addEventListener('pageshow', async function(e) {
+            if (e.persisted || !document.getElementById('content').classList.contains('hidden')) {
+                const valid = await validateAuth();
+                if (!valid) return;
+            }
+        });
+
         const token = localStorage.getItem('token');
         let currentFileId = null;
         let availableUsers = [];
