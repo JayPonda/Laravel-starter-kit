@@ -93,8 +93,8 @@
         </div>
     </div>
 
+    <script src="constants.js"></script>
     <script>
-        const API_URL = window.location.origin.replace(':8081', ':12354') + '/api';
         const token = localStorage.getItem('token');
         let currentFileId = null;
         let availableUsers = [];
@@ -105,8 +105,8 @@
         async function init() {
             try {
                 const [userRes, usersRes] = await Promise.all([
-                    fetch(`${API_URL}/me`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }),
-                    fetch(`${API_URL}/users`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } })
+                    fetch(`${CONFIG.API_URL}/me`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }),
+                    fetch(`${CONFIG.API_URL}/users`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } })
                 ]);
                 
                 if (!userRes.ok) throw new Error('Unauthorized');
@@ -143,7 +143,7 @@
 
         async function loadFiles() {
             try {
-                const res = await fetch(`${API_URL}/files`, {
+                const res = await fetch(`${CONFIG.API_URL}/files`, {
                     headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
                 });
                 const data = await res.json();
@@ -276,7 +276,7 @@
             status.textContent = 'Processing...';
 
             try {
-                const res = await fetch(`${API_URL}/files/${currentFileId}/share`, {
+                const res = await fetch(`${CONFIG.API_URL}/files/${currentFileId}/share`, {
                     method: 'POST',
                     headers: { 
                         'Authorization': `Bearer ${token}`, 
@@ -318,7 +318,7 @@
             status.textContent = 'Uploading...';
 
             try {
-                const res = await fetch(`${API_URL}/files`, {
+                const res = await fetch(`${CONFIG.API_URL}/files`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
                     body: formData
@@ -342,7 +342,7 @@
 
         async function downloadFile(id, filename) {
             try {
-                const res = await fetch(`${API_URL}/files/${id}`, {
+                const res = await fetch(`${CONFIG.API_URL}/files/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!res.ok) throw new Error('Download failed');
@@ -363,7 +363,7 @@
         async function deleteFile(id) {
             if (!confirm('Are you sure?')) return;
             try {
-                const res = await fetch(`${API_URL}/files/${id}`, {
+                const res = await fetch(`${CONFIG.API_URL}/files/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
                 });
@@ -383,7 +383,7 @@
 
         async function logout() {
             try {
-                await fetch(`${API_URL}/logout`, { 
+                await fetch(`${CONFIG.API_URL}/logout`, { 
                     method: 'POST', 
                     headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } 
                 });

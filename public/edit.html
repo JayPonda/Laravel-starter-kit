@@ -113,8 +113,8 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ext-language_tools.min.js"></script>
+    <script src="constants.js"></script>
     <script>
-        const API_URL = window.location.origin.replace(':8081', ':12354') + '/api';
         const token = localStorage.getItem('token');
         const urlParams = new URLSearchParams(window.location.search);
         const fileId = urlParams.get('id');
@@ -139,7 +139,7 @@
         async function init() {
             try {
                 // Get user info
-                const userRes = await fetch(`${API_URL}/me`, { 
+                const userRes = await fetch(`${CONFIG.API_URL}/me`, { 
                     headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } 
                 });
                 if (!userRes.ok) throw new Error('Unauthorized');
@@ -147,7 +147,7 @@
                 document.getElementById('nav-user-name').textContent = user.name;
 
                 // Get file info and content
-                const fileRes = await fetch(`${API_URL}/files/${fileId}`, {
+                const fileRes = await fetch(`${CONFIG.API_URL}/files/${fileId}`, {
                     headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
                 });
                 if (!fileRes.ok) throw new Error('File not found');
@@ -172,7 +172,7 @@
                     editor.setValue(file.content, -1);
                 } else {
                     // If content isn't in meta, we might need to fetch the actual file blob
-                    const blobRes = await fetch(`${API_URL}/files/${fileId}`, {
+                    const blobRes = await fetch(`${CONFIG.API_URL}/files/${fileId}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     const content = await blobRes.text();
@@ -195,7 +195,7 @@
             status.textContent = 'Saving...';
             
             try {
-                const res = await fetch(`${API_URL}/files/${fileId}`, {
+                const res = await fetch(`${CONFIG.API_URL}/files/${fileId}`, {
                     method: 'PUT',
                     headers: { 
                         'Authorization': `Bearer ${token}`, 
