@@ -87,7 +87,7 @@
                         <option value="none">None (Remove access)</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary mt-4" id="submitBtn">Share File</button>
+                <button type="submit" class="btn btn-primary mt-4" id="submitBtn" disabled>Share File</button>
             </form>
             <p id="share-status" class="mt-4"></p>
         </div>
@@ -241,6 +241,7 @@
             const userSelect = document.getElementById('share-user-select');
             const permissionSelect = document.getElementById('share-permission-select');
             
+            submitBtn.disabled = false;
             document.getElementById('shareFileName').textContent = `File: ${fileName}`;
             document.getElementById('share-status').textContent = '';
             
@@ -263,6 +264,9 @@
 
         function closeShareModal() {
             document.getElementById('shareModal').classList.remove('show');
+            document.getElementById('share-user-select').value = '';
+            document.getElementById('shareFileName').textContent = '';
+            document.getElementById('submitBtn').disabled = true;
             currentFileId = null;
         }
 
@@ -291,6 +295,9 @@
                     const data = await res.json();
                     status.textContent = data.message;
                     await loadFiles();
+                    document.getElementById('shareFileName').textContent = '';
+                    document.getElementById('submitBtn').disabled = true;
+                    currentFileId = null;
                     setTimeout(closeShareModal, 1000);
                 } else {
                     const error = await res.json();

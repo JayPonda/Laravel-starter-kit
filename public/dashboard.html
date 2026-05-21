@@ -13,9 +13,7 @@
         <nav class="navbar">
             <a href="dashboard.html" class="navbar-brand">Laravel Boilerplate</a>
             <div class="user-nav">
-                <a href="myfiles.html" class="logout-link">My Files</a>
                 <span id="nav-user-name" class="user-name"></span>
-                <span class="logout-link" onclick="logout()">Logout</span>
             </div>
         </nav>
 
@@ -70,23 +68,14 @@
                     </div>
 
                     <div class="card">
-                        <h2 id="links-title">Quick Links</h2>
-                        <div class="action-list">
-                            <a id="link-0-url" href="#" class="action-item">
-                                <div id="link-0-icon" class="action-icon">--</div>
-                                <div>
-                                    <strong id="link-0-title">--</strong>
-                                    <p id="link-0-desc" class="text-small">--</p>
-                                </div>
-                            </a>
-                            <a id="link-1-url" href="#" class="action-item" target="_blank">
-                                <div id="link-1-icon" class="action-icon">--</div>
-                                <div>
-                                    <strong id="link-1-title">--</strong>
-                                    <p id="link-1-desc" class="text-small">--</p>
-                                </div>
-                            </a>
-                        </div>
+                        <h2>Quick Links</h2>
+                        <ol>
+                            <li><a href="myfiles.html">My Files</a></li>
+                            <li><a href="register.html">Register</a></li>
+                            <li><a href="index.html">Health Check</a></li>
+                            <li><a href="https://github.com/JayPonda/Laravel-starter-kit" target="_blank">Boilerplate Repo</a></li>
+                            <li><a href="#" onclick="logout()">Logout</a></li>
+                        </ol>
                     </div>
                 </div>
             </div>
@@ -143,17 +132,6 @@
             document.getElementById('stat-1-value').textContent = content.dashboard.stats[1].value;
             document.getElementById('stat-2-label').textContent = content.dashboard.stats[2].label;
             document.getElementById('stat-2-value').textContent = content.dashboard.stats[2].value;
-
-            // Links (Static Structure)
-            document.getElementById('link-0-title').textContent = content.dashboard.quick_links[0].title;
-            document.getElementById('link-0-desc').textContent = content.dashboard.quick_links[0].description;
-            document.getElementById('link-0-url').href = content.dashboard.quick_links[0].url;
-            document.getElementById('link-0-icon').textContent = content.dashboard.quick_links[0].icon;
-
-            document.getElementById('link-1-title').textContent = content.dashboard.quick_links[1].title;
-            document.getElementById('link-1-desc').textContent = content.dashboard.quick_links[1].description;
-            document.getElementById('link-1-url').href = content.dashboard.quick_links[1].url;
-            document.getElementById('link-1-icon').textContent = content.dashboard.quick_links[1].icon;
 
             document.getElementById('loading-screen').classList.add('hidden');
             document.getElementById('dashboard-content').classList.remove('hidden');
