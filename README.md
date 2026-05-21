@@ -37,7 +37,7 @@ Choose the setup path that best matches your local environment.
 
 ```bash
 # 1. Clone & Configure
-git clone <repo-url> boilerplate && cd boilerplate
+git clone https://github.com/JayPonda/Laravel-starter-kit boilerplate && cd boilerplate
 cp .env.example .env
 
 # 2. Automated Run
