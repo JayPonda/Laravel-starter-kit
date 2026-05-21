@@ -28,6 +28,14 @@ seed: ## Run database seeders inside Sail
 create-user: ## Create a new user (usage: make create-user name="John Doe" email="john@example.com")
 	docker compose exec backend php artisan user:create "$(name)" "$(email)"
 
+healthcheck: ## Check health of all running services
+	@echo -e "\033[36m>>> Backend API:\033[0m"
+	@curl -sf http://localhost:$(shell sed -n 's/^APP_PORT=//p' .env | head -n 1 | grep . || echo 12354)/api/ | python3 -m json.tool 2>/dev/null || echo -e "\033[31mBackend is DOWN\033[0m"
+	@echo -e "\n\033[36m>>> Frontend:\033[0m"
+	@curl -sf -o /dev/null -w "HTTP %{http_code}\n" http://localhost:$(shell sed -n 's/^FORWARD_FRONTEND_PORT=//p' .env | head -n 1 | grep . || echo 18081)/ || echo -e "\033[31mFrontend is DOWN\033[0m"
+	@echo -e "\n\033[36m>>> Docker Containers:\033[0m"
+	@docker compose ps --format "table {{.Name}}\t{{.Status}}" 2>/dev/null || echo -e "\033[31mNo containers running\033[0m"
+
 queue: ## Start the Sail queue worker
 	docker compose exec backend php artisan queue:work
 

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Services\UserService;
 use Illuminate\Console\Command;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 class CreateUser extends Command
 {
@@ -32,7 +33,12 @@ class CreateUser extends Command
             return Command::FAILURE;
         }
 
-        $result = $this->userService->createUser($name, $email);
+        try {
+            $result = $this->userService->createUser($name, $email);
+        } catch (UniqueConstraintViolationException $e) {
+            $this->error("A user with the email {$email} already exists.");
+            return Command::FAILURE;
+        }
 
         $this->info('User created successfully!');
         $this->info("Name: {$result['user']->name}");
