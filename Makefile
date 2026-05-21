@@ -1,4 +1,4 @@
-.PHONY: help up down restart migrate fresh seed test shell run config queue
+.PHONY: help up down restart migrate fresh seed test shell run config queue create-user
 
 SAIL := ./vendor/bin/sail
 
@@ -24,6 +24,9 @@ fresh: ## Freshly migrate and seed the database
 
 seed: ## Run database seeders inside Sail
 	docker compose exec backend php artisan db:seed
+
+create-user: ## Create a new user (usage: make create-user name="John Doe" email="john@example.com")
+	docker compose exec backend php artisan user:create "$(name)" "$(email)"
 
 queue: ## Start the Sail queue worker
 	docker compose exec backend php artisan queue:work
