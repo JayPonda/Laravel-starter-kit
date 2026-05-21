@@ -22,6 +22,16 @@ class CreateUser extends Command
         $name = $this->argument('name');
         $email = $this->argument('email');
 
+        if (empty($name)) {
+            $this->error('Name is required.');
+            return Command::FAILURE;
+        }
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->error('A valid email is required.');
+            return Command::FAILURE;
+        }
+
         $result = $this->userService->createUser($name, $email);
 
         $this->info('User created successfully!');
