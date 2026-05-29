@@ -89,9 +89,11 @@ url-db: ## Show Database Connection String
 
 crud: ## Create a full CRUD stack (usage: make crud name=Post)
 	docker compose exec backend php artisan make:crud $(name)
+	sudo chown -R $(USER):$(USER) app/Models app/Http/Controllers/database/migrations database/factories database/seeders resources/views routes
 
 model: ## Generate model + migration + factory + seeder (usage: make model name=Post)
 	docker compose exec backend php artisan make:model $(name) -mfs
+	sudo chown -R $(USER):$(USER) app/Models app/Http/Controllers/database/migrations database/factories database/seeders resources/views routes
 
 ini-pull: ## (Recovery) Copy php.ini from container to local docker/8.3/php.ini
 	docker compose cp backend:/etc/php/8.3/cli/conf.d/99-sail.ini ./docker/8.3/php.ini
