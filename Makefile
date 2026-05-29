@@ -1,4 +1,4 @@
-.PHONY: help up down restart migrate fresh seed test shell run config queue create-user
+.PHONY: help up down restart migrate fresh seed test shell run config queue create-user db-reset db-bash
 
 SAIL := ./vendor/bin/sail
 
@@ -94,6 +94,15 @@ crud: ## Create a full CRUD stack (usage: make crud name=Post)
 model: ## Generate model + migration + factory + seeder (usage: make model name=Post)
 	docker compose exec backend php artisan make:model $(name) -mfs
 	sudo chown -R $(USER):$(USER) app/Models app/Http/Controllers/database/migrations database/factories database/seeders resources/views routes
+
+db-reset: ## Stop containers and remove the MySQL volume (destroys all database data)
+	@read -p "This will DELETE all database data. Continue? [y/N] " confirm && [ "$$confirm" = "y" ] || { echo "Aborted"; exit 1; }
+	docker compose stop mysql
+	docker volume rm "$$(docker volume ls -q | grep sail-mysql | head -n 1)" 2>/dev/null || true
+	@echo "MySQL volume removed. Run 'make up' to recreate it."
+
+db-bash: ## Open a MySQL client shell as root using .env credentials
+	docker compose exec mysql mysql -uroot -p$(shell sed -n 's/^DB_PASSWORD=//p' .env | head -n 1) --prompt="\\u@%> " $(shell sed -n 's/^DB_DATABASE=//p' .env | head -n 1)
 
 ini-pull: ## (Recovery) Copy php.ini from container to local docker/8.3/php.ini
 	docker compose cp backend:/etc/php/8.3/cli/conf.d/99-sail.ini ./docker/8.3/php.ini
