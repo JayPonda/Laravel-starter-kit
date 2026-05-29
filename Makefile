@@ -22,8 +22,8 @@ migrate: ## Run database migrations inside Sail
 fresh: ## Freshly migrate and seed the database
 	docker compose exec backend php artisan migrate:fresh --seed
 
-seed: ## Run database seeders inside Sail
-	docker compose exec backend php artisan db:seed
+seed: ## Run database seeders inside Sail (usage: make seed class=TransactionsSeeder)
+	docker compose exec backend php artisan db:seed $(if $(class),--class=$(class))
 
 create-user: ## Create a new user (usage: make create-user name="John Doe" email="john@example.com")
 	docker compose exec backend php artisan user:create "$(name)" "$(email)"
