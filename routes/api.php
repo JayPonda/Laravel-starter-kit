@@ -19,3 +19,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/files/{file}/share/{user}', [FileController::class, 'unshare']);
     Route::apiResource('files', FileController::class);
 });
+
+

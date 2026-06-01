@@ -9,8 +9,8 @@ use Illuminate\Support\Str;
 
 class CreateCrudStack extends Command
 {
-    protected $signature = 'make:crud {name} {--live} {--no-soft}';
-    protected $description = 'Create a full CRUD stack: Migration, Model, Factory, Seeder, Resource, and Controller with API routes';
+    protected $signature = 'gen:crud {name} {--live} {--no-soft} {--no-test}';
+    protected $description = 'Generate a full CRUD stack: Migration, Model, Factory, Seeder, Resource, Service, Controller, Tests, and API routes';
 
     public function __construct(
         private CrudGeneratorService $generator
@@ -24,6 +24,7 @@ class CreateCrudStack extends Command
         $names = $this->generator->getNames($name);
         $live = $this->option('live');
         $noSoft = $this->option('no-soft');
+        $noTest = $this->option('no-test');
 
         $this->info("🚀 Generating CRUD stack for {$name}...");
 
@@ -48,8 +49,28 @@ class CreateCrudStack extends Command
         // 5. Register Routes in api.php
         $this->registerRoutes($name);
 
+        // 6. Create Feature Test
+        if (!$noTest) {
+            $this->createFeatureTest($name);
+        }
+
+        // 7. Create Unit Test
+        if (!$noTest) {
+            $this->createUnitTest($name);
+        }
+
+        // 8. Create Test Data payloads
+        if (!$noTest) {
+            $this->createTestData($name);
+        }
+
         $this->info("✅ CRUD stack for {$name} created successfully!");
         $this->info("🔗 API endpoints registered in routes/api.php");
+
+        if (!$noTest) {
+            $this->info("🧪 Feature & Unit tests created in tests/");
+            $this->info("📁 Test data payloads created in tests/Data/");
+        }
     }
 
     protected function addSoftDeletesToModel(string $name): void
@@ -131,5 +152,39 @@ class CreateCrudStack extends Command
             File::append($path, "\n" . $routeLine . "\n");
             $this->info("🛣 Registered routes for " . Str::plural(Str::snake($name)));
         }
+    }
+
+    protected function createFeatureTest($name): void
+    {
+        $path = $this->generator->getFeatureTestPath($name);
+        $stub = $this->generator->getFeatureTestStub($name);
+
+        File::ensureDirectoryExists(dirname($path));
+        File::put($path, $stub);
+        $this->info("🧪 Created Feature Test: {$name}ControllerTest");
+    }
+
+    protected function createUnitTest($name): void
+    {
+        $path = $this->generator->getUnitTestPath($name);
+        $stub = $this->generator->getUnitTestStub($name);
+
+        File::ensureDirectoryExists(dirname($path));
+        File::put($path, $stub);
+        $this->info("🧪 Created Unit Test: {$name}ServiceTest");
+    }
+
+    protected function createTestData($name): void
+    {
+        $dir = $this->generator->getTestDataDir($name);
+        $files = $this->generator->getTestDataFiles($name);
+
+        File::ensureDirectoryExists($dir);
+
+        foreach ($files as $filename => $content) {
+            File::put($dir . '/' . $filename, $content);
+        }
+
+        $this->info("📁 Created test data payloads in tests/Data/" . Str::snake($name));
     }
 }

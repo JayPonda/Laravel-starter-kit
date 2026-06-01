@@ -96,9 +96,9 @@ read-cmd: ## Generate a command with CSV file reading (usage: make read-cmd name
 	docker compose exec backend php artisan generate:command $(name) "$(sig)" --file-read $(if $(batch),--batch=$(batch))
 	sudo chown -R $(USER):$(USER) app/Console/Commands
 
-crud: ## Create a full CRUD stack (usage: make crud name=Post live=1 no-soft=1)
-	docker compose exec backend php artisan make:crud $(name) $(if $(live),--live) $(if $(no-soft),--no-soft)
-	sudo chown -R $(USER):$(USER) app/Models app/Http/Controllers/database/migrations database/factories database/seeders resources/views routes
+crud: ## Generate a full CRUD stack with tests (usage: make crud name=Post live=1 no-soft=1 no-test=1)
+	docker compose exec backend php artisan gen:crud $(name) $(if $(live),--live) $(if $(no-soft),--no-soft) $(if $(no-test),--no-test)
+	sudo chown -R $(USER):$(USER) app/Models app/Http/Controllers app/Services database/migrations database/factories database/seeders resources/views routes tests
 
 model: ## Generate model + migration + factory + seeder (usage: make model name=Post)
 	docker compose exec backend php artisan make:model $(name) -mfs
