@@ -1,4 +1,4 @@
-.PHONY: help up down restart migrate fresh seed test shell run config queue create-user db-reset db-bash generate-command
+.PHONY: help up down restart migrate fresh seed test shell run config queue create-user db-reset db-bash generate-command read-cmd
 
 SAIL := ./vendor/bin/sail
 
@@ -91,8 +91,13 @@ generate-command: ## Generate a command file (usage: make generate-command name=
 	docker compose exec backend php artisan generate:command $(name) "$(signature)" $(if $(file-read),--file-read) $(if $(batch),--batch=$(batch))
 	sudo chown -R $(USER):$(USER) app/Console/Commands
 
-crud: ## Create a full CRUD stack (usage: make crud name=Post)
-	docker compose exec backend php artisan make:crud $(name)
+read-cmd: ## Generate a command with CSV file reading (usage: make read-cmd name=ImportUsers signature=app:import-users batch=100)
+	$(eval sig := $(or $(signature),$(shell echo $(name) | sed 's/[A-Z]/-&/g;s/^-//' | tr '[:upper:]' '[:lower:]' | sed 's/^/app:/')))
+	docker compose exec backend php artisan generate:command $(name) "$(sig)" --file-read $(if $(batch),--batch=$(batch))
+	sudo chown -R $(USER):$(USER) app/Console/Commands
+
+crud: ## Create a full CRUD stack (usage: make crud name=Post live=1 no-soft=1)
+	docker compose exec backend php artisan make:crud $(name) $(if $(live),--live) $(if $(no-soft),--no-soft)
 	sudo chown -R $(USER):$(USER) app/Models app/Http/Controllers/database/migrations database/factories database/seeders resources/views routes
 
 model: ## Generate model + migration + factory + seeder (usage: make model name=Post)
