@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -116,5 +116,18 @@ class AuthControllerTest extends TestCase
         ]);
 
         $response->assertStatus(422);
+    }
+
+    public function test_authenticated_user_can_list_users(): void
+    {
+        $user = User::factory()->create();
+        User::factory()->count(3)->create();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson('/api/users');
+
+        $response->assertStatus(200);
+        $response->assertJsonCount(3);
+        $response->assertJsonMissing(['id' => $user->id]);
     }
 }

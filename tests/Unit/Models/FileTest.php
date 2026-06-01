@@ -1,8 +1,9 @@
 <?php
 
-namespace Tests\Unit;
+namespace Tests\Unit\Models;
 
 use App\Models\File;
+use App\Models\FileRemoval;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -41,5 +42,25 @@ class FileTest extends TestCase
 
         $this->assertInstanceOf(File::class, $user->files->first());
         $this->assertEquals('owner', $user->files->first()->pivot->permission);
+    }
+
+    public function test_file_has_many_file_removals(): void
+    {
+        $file = File::create([
+            'original_name' => 'removal_test.txt',
+            'path' => 'uploads/removal_test.txt',
+            'mime_type' => 'text/plain',
+            'size' => 100,
+        ]);
+
+        $removal = FileRemoval::create([
+            'file_id' => $file->id,
+            'disk' => 'minio',
+            'old_path' => 'uploads/old.txt',
+            'status' => FileRemoval::STATUS_PENDING,
+        ]);
+
+        $this->assertInstanceOf(FileRemoval::class, $file->fileRemovals->first());
+        $this->assertEquals($removal->id, $file->fileRemovals->first()->id);
     }
 }

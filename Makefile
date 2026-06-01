@@ -1,4 +1,4 @@
-.PHONY: help up down restart migrate fresh seed test shell run config queue create-user db-reset db-bash generate-command read-cmd
+.PHONY: help up down restart stop-all migrate fresh seed test test-coverage shell run config queue create-user db-reset db-bash generate-command read-cmd
 
 SAIL := ./vendor/bin/sail
 
@@ -13,6 +13,9 @@ up: ## Start Sail containers
 
 down: ## Stop Sail containers
 	$(SAIL) down
+
+stop-all: ## Stop all running Docker containers
+	docker stop $$(docker ps -aq)
 
 restart: down up ## Restart Sail containers
 
@@ -59,8 +62,11 @@ clear: ## Clear logs and cached configuration
 	docker compose exec backend php artisan cache:clear || true
 	docker compose exec backend php artisan view:clear
 
-test: ## Run tests inside Sail
-	docker compose exec backend php artisan test
+test: ## Run tests in a temporary container (uses SQLite in-memory, safe to run alongside backend)
+	docker compose run --rm --entrypoint php backend artisan test
+
+test-coverage: ## Run tests with code coverage report
+	docker compose run --rm --entrypoint php backend artisan test --coverage
 
 shell: ## Open a bash shell in the Sail app container
 	docker compose exec backend /bin/bash
