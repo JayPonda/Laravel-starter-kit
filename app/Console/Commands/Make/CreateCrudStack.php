@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Make;
 
 use App\Services\CrudGeneratorService;
 use Illuminate\Console\Command;
@@ -31,14 +31,26 @@ class CreateCrudStack extends Command
         // 2. Create Resource
         $this->call('make:resource', ['name' => "{$name}Resource"]);
 
-        // 3. Create Controller with Boilerplate
+        // 3. Create Service
+        $this->createService($name);
+
+        // 4. Create Controller with Boilerplate (delegates to Service)
         $this->createController($name);
 
-        // 4. Register Routes in api.php
+        // 5. Register Routes in api.php
         $this->registerRoutes($name);
 
         $this->info("✅ CRUD stack for {$name} created successfully!");
         $this->info("🔗 API endpoints registered in routes/api.php");
+    }
+
+    protected function createService($name)
+    {
+        $path = $this->generator->getServicePath($name);
+        $stub = $this->generator->getServiceStub($name);
+
+        File::put($path, $stub);
+        $this->info("📄 Created Service: {$name}Service");
     }
 
     protected function createController($name)
