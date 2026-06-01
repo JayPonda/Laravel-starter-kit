@@ -1,4 +1,4 @@
-.PHONY: help up down restart migrate fresh seed test shell run config queue create-user db-reset db-bash
+.PHONY: help up down restart migrate fresh seed test shell run config queue create-user db-reset db-bash generate-command
 
 SAIL := ./vendor/bin/sail
 
@@ -86,6 +86,10 @@ url-frontend: ## Show Frontend URL
 
 url-db: ## Show Database Connection String
 	@echo "mysql://$(shell sed -n 's/^DB_USERNAME=//p' .env | head -n 1):$(shell sed -n 's/^DB_PASSWORD=//p' .env | head -n 1)@127.0.0.1:$(shell sed -n 's/^FORWARD_DB_PORT=//p' .env | head -n 1 | grep . || echo 3311)/$(shell sed -n 's/^DB_DATABASE=//p' .env | head -n 1)"
+
+generate-command: ## Generate a command file (usage: make generate-command name=ProcessFiles signature=app:process-files file-read=1 batch=100)
+	docker compose exec backend php artisan generate:command $(name) "$(signature)" $(if $(file-read),--file-read) $(if $(batch),--batch=$(batch))
+	sudo chown -R $(USER):$(USER) app/Console/Commands
 
 crud: ## Create a full CRUD stack (usage: make crud name=Post)
 	docker compose exec backend php artisan make:crud $(name)
