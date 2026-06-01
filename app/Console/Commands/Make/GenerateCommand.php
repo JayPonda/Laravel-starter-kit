@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Make;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
@@ -55,7 +55,7 @@ class GenerateCommand extends Command
             $commandSignature .= ' {--batch=}';
         }
 
-        $uses = $hasFileRead ? "use Illuminate\Support\Facades\File;\n" : '';
+        $uses = $hasFileRead ? "use Illuminate\Support\Facades\File;\nuse Illuminate\Support\Facades\Storage;\n" : '';
         $handlerMethod = $hasFileRead ? $this->buildHandlerMethod($batch) : '';
         $batchMethod = ($hasFileRead && $batch) ? $this->buildBatchMethod() : '';
         $handle = $hasFileRead
@@ -98,6 +98,9 @@ PHP;
         $body .= "        \$this->dry = \$this->option('dry');\n";
         $body .= "        \$uniqueColumn = \$this->option('unique-column');\n";
         $body .= "        \$uniqueValue = \$this->option('unique-column-value');\n\n";
+        $body .= "        if (!str_contains(\$filename, '/') && !str_contains(\$filename, '\\\\')) {\n";
+        $body .= "            \$filename = Storage::disk('local')->path(\$filename);\n";
+        $body .= "        }\n\n";
         $body .= "        if (!File::exists(\$filename)) {\n";
         $body .= "            \$this->error(\"File not found: {\$filename}\");\n";
         $body .= "            return Command::FAILURE;\n";
@@ -197,5 +200,3 @@ METHODS;
 METHODS;
     }
 }
-
-PHP;
