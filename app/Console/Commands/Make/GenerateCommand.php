@@ -111,8 +111,8 @@ PHP;
         $body .= "        } else {\n";
         $body .= "            \$this->info('LIVE RUN — changes will be applied');\n";
         $body .= "        }\n\n";
-        $body .= "        \$handle = fopen(\$filename, 'rb');\n";
-        $body .= "        \$buffer = '';\n";
+        $body .= "        \$lines = File::lines(\$filename);\n";
+        $body .= "        \$headers = str_getcsv(\$lines->first());\n";
         $body .= "        \$total = 0;\n\n";
 
         if ($batch) {
@@ -120,40 +120,34 @@ PHP;
             $body .= "        \$batch = [];\n\n";
         }
 
-        $body .= "        while (!feof(\$handle)) {\n";
-        $body .= "            \$chunk = fread(\$handle, 8192);\n";
-        $body .= "            \$buffer .= \$chunk;\n\n";
-        $body .= "            while ((\$newlinePos = strpos(\$buffer, \"\\n\")) !== false) {\n";
-        $body .= "                \$line = substr(\$buffer, 0, \$newlinePos);\n";
-        $body .= "                \$buffer = substr(\$buffer, \$newlinePos + 1);\n\n";
-        $body .= "                if (\$total++ === 0) {\n";
-        $body .= "                    \$headers = str_getcsv(\$line);\n";
-        $body .= "                    continue;\n";
-        $body .= "                }\n\n";
-        $body .= "                \$values = str_getcsv(\$line);\n\n";
-        $body .= "                if (count(\$headers) !== count(\$values)) {\n";
-        $body .= "                    continue;\n";
-        $body .= "                }\n\n";
-        $body .= "                \$record = array_combine(\$headers, \$values);\n\n";
-        $body .= "                if (\$uniqueColumn && \$uniqueValue && (\$record[\$uniqueColumn] ?? null) === \$uniqueValue) {\n";
-        $body .= "                    continue;\n";
-        $body .= "                }\n\n";
+        $body .= "        foreach (\$lines->skip(1) as \$line) {\n";
+        $body .= "            \$line = trim(\$line);\n";
+        $body .= "            if (\$line === '') {\n";
+        $body .= "                continue;\n";
+        $body .= "            }\n\n";
+        $body .= "            \$values = str_getcsv(\$line);\n\n";
+        $body .= "            if (count(\$headers) !== count(\$values)) {\n";
+        $body .= "                continue;\n";
+        $body .= "            }\n\n";
+        $body .= "            \$record = array_combine(\$headers, \$values);\n\n";
+        $body .= "            if (\$uniqueColumn && \$uniqueValue && (\$record[\$uniqueColumn] ?? null) === \$uniqueValue) {\n";
+        $body .= "                continue;\n";
+        $body .= "            }\n\n";
 
         if ($batch) {
-            $body .= "                \$batch[] = \$record;\n\n";
-            $body .= "                if (count(\$batch) >= \$batchSize) {\n";
-            $body .= "                    \$this->handleBatch(\$batch);\n";
-            $body .= "                    \$this->output->write('.');\n";
-            $body .= "                    \$batch = [];\n";
-            $body .= "                }\n";
-        } else {
-            $body .= "                \$this->handleRow(\$record);\n";
+            $body .= "            \$batch[] = \$record;\n\n";
+            $body .= "            if (count(\$batch) >= \$batchSize) {\n";
+            $body .= "                \$this->handleBatch(\$batch);\n";
             $body .= "                \$this->output->write('.');\n";
+            $body .= "                \$batch = [];\n";
+            $body .= "            }\n";
+        } else {
+            $body .= "            \$this->handleRow(\$record);\n";
+            $body .= "            \$this->output->write('.');\n";
         }
 
-        $body .= "            }\n";
+        $body .= "            \$total++;\n";
         $body .= "        }\n\n";
-        $body .= "        fclose(\$handle);\n\n";
 
         if ($batch) {
             $body .= "        if (!empty(\$batch)) {\n";
