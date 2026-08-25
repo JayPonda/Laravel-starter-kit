@@ -64,22 +64,15 @@
         <div class="card">
             <h2 id="links-title">Quick Links</h2>
             <div class="action-list">
-                <!-- Link 1 -->
-                <a href="{{ $content['dashboard']['quick_links'][0]['url'] }}" class="action-item">
-                    <div class="action-icon">{{ $content['dashboard']['quick_links'][0]['icon'] }}</div>
-                    <div>
-                        <strong>{{ $content['dashboard']['quick_links'][0]['title'] }}</strong>
-                        <p class="text-small">{{ $content['dashboard']['quick_links'][0]['description'] }}</p>
-                    </div>
-                </a>
-                <!-- Link 2 -->
-                <a href="{{ $content['dashboard']['quick_links'][1]['url'] }}" class="action-item" target="_blank">
-                    <div class="action-icon">{{ $content['dashboard']['quick_links'][1]['icon'] }}</div>
-                    <div>
-                        <strong>{{ $content['dashboard']['quick_links'][1]['title'] }}</strong>
-                        <p class="text-small">{{ $content['dashboard']['quick_links'][1]['description'] }}</p>
-                    </div>
-                </a>
+                @foreach ($content['dashboard']['quick_links'] as $link)
+                    <a href="{{ $link['url'] }}" class="action-item" {{ (!empty($link['external']) || str_starts_with($link['url'], 'http')) ? 'target="_blank"' : '' }}>
+                        <div class="action-icon">{{ $link['icon'] }}</div>
+                        <div>
+                            <strong>{{ $link['title'] }}</strong>
+                            <p class="text-small">{{ $link['description'] }}</p>
+                        </div>
+                    </a>
+                @endforeach
             </div>
         </div>
     </div>

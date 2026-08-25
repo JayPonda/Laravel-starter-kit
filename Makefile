@@ -1,4 +1,4 @@
-.PHONY: help up down restart stop-all migrate fresh seed test test-coverage shell run config queue create-user db-reset db-bash generate-command read-cmd g fix
+.PHONY: help up down restart stop-all migrate fresh seed test test-coverage shell run config queue create-user update-user db-reset db-bash generate-command read-cmd g fix swagger
 
 .DEFAULT_GOAL := help
 
@@ -45,6 +45,10 @@ seed: ## Run database seeders inside Sail (usage: make seed class=TransactionsSe
 
 create-user: ## Create a new user (usage: make create-user name="John Doe" email="john@example.com")
 	docker compose exec backend php artisan user:create "$(name)" "$(email)"
+	$(FIX_PERMS)
+
+update-user: ## Reset a user password to a temporary one (usage: make update-user email="john@example.com")
+	docker compose exec backend php artisan user:update "$(email)"
 	$(FIX_PERMS)
 
 healthcheck: ## Check health of all running services
@@ -149,3 +153,7 @@ ini-pull: ## (Recovery) Copy php.ini from container to local docker/8.3/php.ini
 
 config: ## Generate MySQL configuration (used by Docker volumes)
 	php setup/generate-db-sql.php
+
+swagger: ## Generate the Swagger/OpenAPI documentation (storage/api-docs/api-docs.json)
+	docker compose exec backend php artisan l5-swagger:generate
+	$(FIX_PERMS)

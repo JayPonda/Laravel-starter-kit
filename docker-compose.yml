@@ -1,11 +1,12 @@
 services:
     backend:
+        container_name: laravel-starter-kit-backend
         build:
-            context: ./docker/8.3
+            context: ./docker/8.5
             dockerfile: Dockerfile
             args:
                 WWWGROUP: '${WWWGROUP}'
-        image: sail-8.3/app
+        image: sail-8.5/app
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
@@ -19,7 +20,7 @@ services:
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
         volumes:
             - '.:/var/www/html'
-            - './docker/8.3/php.ini:/etc/php/8.3/cli/conf.d/99-sail.ini'
+            - './docker/8.5/php.ini:/etc/php/8.5/cli/conf.d/99-sail.ini'
         networks:
             - sail
         depends_on:
@@ -36,6 +37,7 @@ services:
             timeout: 5s
             retries: 5
     mysql:
+        container_name: laravel-starter-kit-mysql
         image: 'mysql:8.0'
         ports:
             - '${FORWARD_DB_PORT:-33101}:3306'
@@ -60,6 +62,7 @@ services:
             retries: 3
             timeout: 5s
     redis:
+        container_name: laravel-starter-kit-redis
         image: 'redis:7-alpine'
         ports:
             - '${FORWARD_REDIS_PORT:-63079}:6379'
@@ -77,6 +80,7 @@ services:
             retries: 3
             timeout: 5s
     minio:
+        container_name: laravel-starter-kit-minio
         image: 'minio/minio:latest'
         ports:
             - '${FORWARD_MINIO_PORT:-19000}:9000'
@@ -98,6 +102,7 @@ services:
             retries: 3
             timeout: 5s
     frontend:
+        container_name: laravel-starter-kit-frontend
         image: 'nginx:alpine'
         ports:
             - '${FORWARD_FRONTEND_PORT:-18081}:80'
