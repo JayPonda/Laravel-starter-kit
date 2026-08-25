@@ -83,7 +83,7 @@
         <nav class="navbar">
             <a href="dashboard.html" class="navbar-brand">Laravel Boilerplate</a>
             <div class="user-nav">
-                <a href="myfiles.html" class="logout-link">My Files</a>
+                <a href="files.html" class="logout-link">My Files</a>
                 <span id="nav-user-name" class="user-name"></span>
                 <span class="logout-link" onclick="logout()">Logout</span>
             </div>
@@ -93,7 +93,7 @@
             <div class="editor-wrapper">
                 <div class="editor-toolbar">
                     <div class="flex-center gap-4">
-                        <a href="myfiles.html" class="btn btn-secondary btn-small">← Exit</a>
+                        <a href="files.html" class="btn btn-secondary btn-small">← Exit</a>
                         <div class="file-info">
                             <span id="display-file-name" class="file-name">file_name.ext</span>
                             <span id="display-file-mode" class="file-mode status-badge status-loading">TEXT</span>
@@ -142,7 +142,7 @@
         const fileId = urlParams.get('id');
 
         if (!token) window.location.href = 'login.html';
-        if (!fileId) window.location.href = 'myfiles.html';
+        if (!fileId) window.location.href = 'files.html';
 
         // Configure Ace
         ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/');
@@ -208,7 +208,7 @@
             } catch (err) {
                 console.error(err);
                 alert('Failed to load file for editing');
-                window.location.href = 'myfiles.html';
+                window.location.href = 'files.html';
             }
         }
 
