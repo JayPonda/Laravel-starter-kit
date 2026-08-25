@@ -1,8 +1,8 @@
 <?php
 
-// Per-mode redirect targets, baked in by the chosen frontend preset at setup
-// time. There is intentionally NO runtime branching on the frontend mode:
-// the apply step copies exactly one of these files into place.
+// Redirect targets for the Blade (server-rendered) frontend branch. There is
+// intentionally NO runtime branching on the frontend mode; this file is simply
+// the version that ships with the blade branch.
 return [
     'guest_redirect' => '/login',
     'user_redirect' => '/dashboard',
