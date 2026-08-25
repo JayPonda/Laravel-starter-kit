@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Dashboard - Laravel Boilerplate</title>
-    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="styleguild.css">
 </head>
 <body>
     <div id="loading-screen" class="loading-screen">Loading dashboard...</div>
@@ -16,7 +16,9 @@
         <nav class="navbar">
             <a href="dashboard.html" class="navbar-brand">Laravel Boilerplate</a>
             <div class="user-nav">
+                <a href="myfiles.html" class="logout-link">My Files</a>
                 <span id="nav-user-name" class="user-name"></span>
+                <a href="#" class="logout-link" onclick="logout()">Logout</a>
             </div>
         </nav>
 
@@ -72,13 +74,7 @@
 
                     <div class="card">
                         <h2>Quick Links</h2>
-                        <ol>
-                            <li><a href="myfiles.html">My Files</a></li>
-                            <li><a href="register.html">Register</a></li>
-                            <li><a href="index.html">Health Check</a></li>
-                            <li><a href="https://github.com/JayPonda/Laravel-starter-kit" target="_blank">Boilerplate Repo</a></li>
-                            <li><a href="#" onclick="logout()">Logout</a></li>
-                        </ol>
+                        <div id="quick-links" class="action-list mt-4"></div>
                     </div>
                 </div>
             </div>
@@ -153,8 +149,25 @@
             document.getElementById('stat-2-label').textContent = content.dashboard.stats[2].label;
             document.getElementById('stat-2-value').textContent = content.dashboard.stats[2].value;
 
+            renderQuickLinks(content.dashboard.quick_links);
+
             document.getElementById('loading-screen').classList.add('hidden');
             document.getElementById('dashboard-content').classList.remove('hidden');
+        }
+
+        function renderQuickLinks(links) {
+            const container = document.getElementById('quick-links');
+            container.innerHTML = '';
+            (links || []).forEach(link => {
+                const a = document.createElement('a');
+                a.href = link.url;
+                a.className = 'action-item';
+                if (link.external || (link.url && link.url.startsWith('http'))) {
+                    a.target = '_blank';
+                }
+                a.innerHTML = `<div class="action-icon">${link.icon}</div><div><strong>${link.title}</strong><p class="text-small">${link.description}</p></div>`;
+                container.appendChild(a);
+            });
         }
 
         async function logout() {
