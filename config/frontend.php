@@ -1,9 +1,9 @@
 <?php
 
-// Per-mode redirect targets, baked in by the chosen frontend preset at setup
-// time. There is intentionally NO runtime branching on the frontend mode:
-// the apply step copies exactly one of these files into place.
+// Redirect targets for the backend-only (no frontend) branch. There is no Blade
+// or static frontend here, so unauthenticated users are sent to the Swagger UI.
+// Each frontend branch ships its own version of this file.
 return [
-    'guest_redirect' => '/login',
-    'user_redirect' => '/dashboard',
+    'guest_redirect' => '/api/documentation',
+    'user_redirect' => '/api/documentation',
 ];
