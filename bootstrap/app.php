@@ -16,9 +16,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+
+        // Guest/user redirect targets are baked in per frontend preset
+        // (config/frontend.php), copied into place at setup time. We read the
+        // file directly because the config repository is not bound yet here.
+        // There is intentionally NO runtime branching on the frontend mode.
+        $redirects = require __DIR__.'/../config/frontend.php';
         $middleware->redirectTo(
-            guests: '/login.html',
-            users: '/dashboard'
+            guests: $redirects['guest_redirect'] ?? '/login',
+            users: $redirects['user_redirect'] ?? '/dashboard'
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {

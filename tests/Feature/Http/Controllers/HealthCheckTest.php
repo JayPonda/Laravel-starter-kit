@@ -4,12 +4,17 @@ namespace Tests\Feature\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class HealthCheckTest extends TestCase
 {
     public function test_web_health_check_returns_success(): void
     {
+        if (! Route::has('web.files.index')) {
+            $this->markTestSkipped('Blade web routes are not enabled in this frontend mode.');
+        }
+
         Redis::shouldReceive('connection')->andReturnSelf();
         Redis::shouldReceive('ping')->andReturn(true);
 

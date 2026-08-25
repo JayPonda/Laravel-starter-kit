@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Dashboard - Laravel Boilerplate</title>
+    <link rel="stylesheet" href="styleguild.css">
+</head>
+<body>
+    <div id="loading-screen" class="loading-screen">Loading dashboard...</div>
+
+    <div id="dashboard-content" class="hidden">
+        <nav class="navbar">
+            <a href="dashboard.html" class="navbar-brand">Laravel Boilerplate</a>
+            <div class="user-nav">
+                <a href="myfiles.html" class="logout-link">My Files</a>
+                <span id="nav-user-name" class="user-name"></span>
+                <a href="#" class="logout-link" onclick="logout()">Logout</a>
+            </div>
+        </nav>
+
+        <div class="main-container">
+            <div class="page-header">
+                <h1>Welcome back, <span id="welcome-name">User</span>!</h1>
+            </div>
+
+            <div class="grid">
+                <!-- User Profile Card -->
+                <div class="card text-center">
+                    <div id="user-avatar" class="avatar">U</div>
+                    <h2 id="profile-card-title">--</h2>
+                    <div class="info-item">
+                        <span id="label-name" class="info-label">--</span>
+                        <span id="profile-name" class="info-value">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="label-email" class="info-label">--</span>
+                        <span id="profile-email" class="info-value">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="label-member-since" class="info-label">--</span>
+                        <span id="profile-date" class="info-value">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="profile-role-label" class="info-label">--</span>
+                        <span id="profile-role-value" class="info-value">--</span>
+                    </div>
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="flex-column">
+                    <div class="card welcome-card">
+                        <h2 id="welcome-title">--</h2>
+                        <p id="welcome-desc">--</p>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span id="stat-0-value" class="stat-value">--</span>
+                                <span id="stat-0-label" class="stat-label">--</span>
+                            </div>
+                            <div class="stat-item">
+                                <span id="stat-1-value" class="stat-value">--</span>
+                                <span id="stat-1-label" class="stat-label">--</span>
+                            </div>
+                            <div class="stat-item">
+                                <span id="stat-2-value" class="stat-value">--</span>
+                                <span id="stat-2-label" class="stat-label">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>Quick Links</h2>
+                        <div id="quick-links" class="action-list mt-4"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="constants.js"></script>
+    <script>
+        async function validateAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = 'login.html'; return false; }
+            try {
+                const res = await fetch(`${CONFIG.API_URL}/me`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                });
+                if (!res.ok) { localStorage.removeItem('token'); window.location.href = 'login.html'; return false; }
+            } catch { localStorage.removeItem('token'); window.location.href = 'login.html'; return false; }
+            return true;
+        }
+
+        window.addEventListener('pageshow', async function(e) {
+            if (e.persisted || !document.getElementById('dashboard-content').classList.contains('hidden')) {
+                const valid = await validateAuth();
+                if (!valid) return;
+            }
+        });
+
+        const token = localStorage.getItem('token');
+
+        async function init() {
+            try {
+                const [userRes, contentRes] = await Promise.all([
+                    fetch(`${CONFIG.API_URL}/me`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }),
+                    fetch('content.json')
+                ]);
+                if (!userRes.ok) throw new Error('Unauthorized');
+                const user = await userRes.json();
+                const content = await contentRes.json();
+                renderDashboard(user, content);
+            } catch (err) {
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        }
+
+        function renderDashboard(user, content) {
+            // Navbar & Welcome
+            document.getElementById('nav-user-name').textContent = user.name;
+            document.getElementById('welcome-name').textContent = user.name.split(' ')[0];
+            
+            // Profile Card Labels & Dynamic Data
+            document.getElementById('profile-card-title').textContent = content.profile.title;
+            document.getElementById('label-name').textContent = content.profile.labels.name;
+            document.getElementById('profile-name').textContent = user.name;
+            document.getElementById('label-email').textContent = content.profile.labels.email;
+            document.getElementById('profile-email').textContent = user.email;
+            document.getElementById('label-member-since').textContent = content.profile.labels.member_since;
+            document.getElementById('profile-date').textContent = new Date(user.created_at).toLocaleDateString();
+            document.getElementById('profile-role-label').textContent = content.profile.role_label;
+            document.getElementById('profile-role-value').textContent = content.profile.default_role;
+            document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
+
+            // Welcome Card
+            document.getElementById('welcome-title').textContent = content.dashboard.welcome.title;
+            document.getElementById('welcome-desc').textContent = content.dashboard.welcome.description;
+
+            // Stats (Static Structure)
+            document.getElementById('stat-0-label').textContent = content.dashboard.stats[0].label;
+            document.getElementById('stat-0-value').textContent = content.dashboard.stats[0].value;
+            document.getElementById('stat-1-label').textContent = content.dashboard.stats[1].label;
+            document.getElementById('stat-1-value').textContent = content.dashboard.stats[1].value;
+            document.getElementById('stat-2-label').textContent = content.dashboard.stats[2].label;
+            document.getElementById('stat-2-value').textContent = content.dashboard.stats[2].value;
+
+            renderQuickLinks(content.dashboard.quick_links);
+
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.remove('hidden');
+        }
+
+        function renderQuickLinks(links) {
+            const container = document.getElementById('quick-links');
+            container.innerHTML = '';
+            (links || []).forEach(link => {
+                const a = document.createElement('a');
+                a.href = link.url;
+                a.className = 'action-item';
+                if (link.external || (link.url && link.url.startsWith('http'))) {
+                    a.target = '_blank';
+                }
+                a.innerHTML = `<div class="action-icon">${link.icon}</div><div><strong>${link.title}</strong><p class="text-small">${link.description}</p></div>`;
+                container.appendChild(a);
+            });
+        }
+
+        async function logout() {
+            try {
+                await fetch(`${CONFIG.API_URL}/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } });
+            } finally {
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        }
+        init();
+    </script>
+</body>
+</html>

@@ -19,6 +19,17 @@ class FileControllerTest extends TestCase
         Storage::fake('minio');
     }
 
+    /**
+     * Blade web routes only exist in the "blade" frontend mode. Skip web-only
+     * tests when they are not registered (e.g. the "public" static-HTML mode).
+     */
+    protected function skipIfNoWebRoutes(): void
+    {
+        if (! \Illuminate\Support\Facades\Route::has('web.files.index')) {
+            $this->markTestSkipped('Blade web routes are not enabled in this frontend mode.');
+        }
+    }
+
     public function test_user_can_upload_file()
     {
         $user = User::factory()->create();
@@ -175,6 +186,7 @@ class FileControllerTest extends TestCase
 
     public function test_web_index_shows_files_categorized()
     {
+        $this->skipIfNoWebRoutes();
         $user = User::factory()->create();
 
         $editable = File::create([
@@ -202,6 +214,7 @@ class FileControllerTest extends TestCase
 
     public function test_web_upload_redirects_back()
     {
+        $this->skipIfNoWebRoutes();
         $user = User::factory()->create();
         $file = UploadedFile::fake()->create('web_doc.pdf', 500);
 
@@ -218,6 +231,7 @@ class FileControllerTest extends TestCase
 
     public function test_web_delete_redirects_back()
     {
+        $this->skipIfNoWebRoutes();
         $user = User::factory()->create();
         $file = File::create([
             'original_name' => 'web_delete.txt',
@@ -308,6 +322,7 @@ class FileControllerTest extends TestCase
 
     public function test_web_share_redirects_back(): void
     {
+        $this->skipIfNoWebRoutes();
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $file = File::create(['original_name' => 'web_share.txt', 'path' => 'ws.txt', 'mime_type' => 'text/plain', 'size' => 10]);
@@ -325,6 +340,7 @@ class FileControllerTest extends TestCase
 
     public function test_web_unshare_redirects_back(): void
     {
+        $this->skipIfNoWebRoutes();
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $file = File::create(['original_name' => 'web_unshare.txt', 'path' => 'wu.txt', 'mime_type' => 'text/plain', 'size' => 10]);
@@ -385,6 +401,7 @@ class FileControllerTest extends TestCase
 
     public function test_owner_can_edit_file(): void
     {
+        $this->skipIfNoWebRoutes();
         $user = User::factory()->create();
         $file = File::create([
             'original_name' => 'edit_inline.txt',
@@ -406,6 +423,7 @@ class FileControllerTest extends TestCase
 
     public function test_edit_returns_404_when_file_missing_on_storage(): void
     {
+        $this->skipIfNoWebRoutes();
         $user = User::factory()->create();
         $file = File::create([
             'original_name' => 'missing.txt',
@@ -423,6 +441,7 @@ class FileControllerTest extends TestCase
 
     public function test_show_downloads_file(): void
     {
+        $this->skipIfNoWebRoutes();
         $user = User::factory()->create();
         $file = File::create([
             'original_name' => 'download.txt',
@@ -443,6 +462,7 @@ class FileControllerTest extends TestCase
 
     public function test_update_with_web_redirects_back(): void
     {
+        $this->skipIfNoWebRoutes();
         $user = User::factory()->create();
         $file = File::create([
             'original_name' => 'web_update.txt',
@@ -462,6 +482,7 @@ class FileControllerTest extends TestCase
 
     public function test_destroy_with_web_redirects_back(): void
     {
+        $this->skipIfNoWebRoutes();
         $user = User::factory()->create();
         $file = File::create([
             'original_name' => 'destroy_web.txt',
