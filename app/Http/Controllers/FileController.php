@@ -10,12 +10,29 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Files', description: 'File management endpoints')]
 class FileController extends Controller
 {
-    /**
-     * List user's files
-     */
+    #[OA\Get(
+        path: '/files',
+        summary: 'List the authenticated user\'s files',
+        tags: ['Files'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', description: 'Pagination page', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Paginated list of files', content: new OA\JsonContent(type: 'object', properties: [
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/File')),
+                new OA\Property(property: 'current_page', type: 'integer'),
+                new OA\Property(property: 'last_page', type: 'integer'),
+                new OA\Property(property: 'total', type: 'integer'),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+        ]
+    )]
     public function index(Request $request)
     {
         Log::info('FileController@index called by user: ' . Auth::id());
@@ -52,9 +69,32 @@ class FileController extends Controller
         return view('files.index', compact('myFiles', 'sharedFiles', 'editableFiles', 'viewOnlyFiles', 'users'));
     }
 
-    /**
-     * Upload a file
-     */
+    #[OA\Post(
+        path: '/files',
+        summary: 'Upload a file',
+        tags: ['Files'],
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['file'],
+                    properties: [
+                        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'File to upload (max 10MB)'),
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'File uploaded', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'message', type: 'string', example: 'File uploaded successfully'),
+                new OA\Property(property: 'file', ref: '#/components/schemas/File'),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 422, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/Error')),
+        ]
+    )]
     public function store(Request $request)
     {
         Log::info('FileController@store called by user: ' . Auth::id());
@@ -119,9 +159,28 @@ class FileController extends Controller
         return view('files.edit', compact('file', 'content', 'extension'));
     }
 
-    /**
-     * Update file content
-     */
+    #[OA\Put(
+        path: '/files/{file}',
+        summary: 'Update a file\'s content',
+        tags: ['Files'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'file', in: 'path', required: true, description: 'File ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['content'],
+                properties: [new OA\Property(property: 'content', type: 'string', example: 'Updated file content')]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'File saved', content: new OA\JsonContent(properties: [new OA\Property(property: 'message', type: 'string', example: 'File saved successfully')])),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Not found'),
+        ]
+    )]
     public function update(Request $request, File $file)
     {
         Log::info("FileController@update called for file ID: {$file->id} by user: " . Auth::id());
@@ -163,9 +222,21 @@ class FileController extends Controller
         return redirect()->back()->with('success', 'File saved successfully!');
     }
 
-    /**
-     * Get file details
-     */
+    #[OA\Get(
+        path: '/files/{file}',
+        summary: 'Get file details',
+        tags: ['Files'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'file', in: 'path', required: true, description: 'File ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'File details', content: new OA\JsonContent(ref: '#/components/schemas/File')),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Not found'),
+        ]
+    )]
     public function show(File $file)
     {
         Log::info("FileController@show called for file ID: {$file->id} by user: " . Auth::id());
@@ -193,9 +264,21 @@ class FileController extends Controller
         ]);
     }
 
-    /**
-     * Delete a file
-     */
+    #[OA\Delete(
+        path: '/files/{file}',
+        summary: 'Delete a file',
+        tags: ['Files'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'file', in: 'path', required: true, description: 'File ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Deletion initiated', content: new OA\JsonContent(properties: [new OA\Property(property: 'message', type: 'string', example: 'File deletion initiated')])),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Not found'),
+        ]
+    )]
     public function destroy(Request $request, File $file)
     {
         Log::info("FileController@destroy called for file ID: {$file->id} by user: " . Auth::id());
@@ -225,9 +308,31 @@ class FileController extends Controller
         return redirect()->back()->with('success', 'File deletion initiated!');
     }
 
-    /**
-     * Share a file with another user
-     */
+    #[OA\Post(
+        path: '/files/{file}/share',
+        summary: 'Share a file with another user',
+        tags: ['Files'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'file', in: 'path', required: true, description: 'File ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['user_id', 'permission'],
+                properties: [
+                    new OA\Property(property: 'user_id', type: 'integer', example: 2),
+                    new OA\Property(property: 'permission', type: 'string', enum: ['editor', 'viewer', 'none'], example: 'viewer'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Share updated', content: new OA\JsonContent(properties: [new OA\Property(property: 'message', type: 'string', example: 'File shared successfully')])),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 422, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/Error')),
+        ]
+    )]
     public function share(Request $request, File $file)
     {
         Log::info("FileController@share called for file ID: {$file->id} by user: " . Auth::id());
@@ -257,9 +362,21 @@ class FileController extends Controller
         return redirect()->back()->with('success', $message);
     }
 
-    /**
-     * Remove access for a specific user
-     */
+    #[OA\Delete(
+        path: '/files/{file}/share/{user}',
+        summary: 'Revoke a user\'s access to a file',
+        tags: ['Files'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'file', in: 'path', required: true, description: 'File ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'user', in: 'path', required: true, description: 'User ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Access revoked', content: new OA\JsonContent(properties: [new OA\Property(property: 'message', type: 'string', example: 'Access revoked successfully')])),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+        ]
+    )]
     public function unshare(Request $request, File $file, \App\Models\User $user)
     {
         Log::info("FileController@unshare called for file ID: {$file->id} by user: " . Auth::id());

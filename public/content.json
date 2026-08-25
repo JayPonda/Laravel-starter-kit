@@ -22,6 +22,12 @@
                 "url": "https://laravel.com/docs",
                 "icon": "DOC",
                 "external": true
+            },
+            {
+                "title": "API Documentation",
+                "description": "Explore and test the REST API (Swagger UI).",
+                "url": "/documentation",
+                "icon": "SWG"
             }
         ]
     },
