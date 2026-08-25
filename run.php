@@ -16,29 +16,8 @@ function runCommand($command, $description)
 $SAIL = './vendor/bin/sail';
 
 // Parse options for installation
-$options = getopt('i', ['frontend:']);
+$options = getopt('i', []);
 $shouldInstall = isset($options['i']);
-
-// Resolve frontend mode: --frontend=blade|public (default: blade)
-$frontendMode = $options['frontend'] ?? null;
-if ($frontendMode === null) {
-    // Interactive prompt (skipped when not a TTY -> default to blade)
-    if (stream_isatty(STDIN)) {
-        echo "\n>>> Choose the frontend rendering mode:\n";
-        echo "   1) blade   (server-rendered Laravel views + session auth) [default]\n";
-        echo "   2) public  (standalone static HTML pages talking to the REST API)\n";
-        echo "Select [1/2] (Enter = blade): ";
-        $answer = trim(fgets(STDIN));
-        $frontendMode = ($answer === '2') ? 'public' : 'blade';
-    } else {
-        $frontendMode = 'blade';
-    }
-}
-if (! in_array($frontendMode, ['blade', 'public'], true)) {
-    echo "Error: invalid --frontend value '{$frontendMode}'. Use 'blade' or 'public'.\n";
-    exit(1);
-}
-echo "\n>>> Frontend mode: {$frontendMode}\n";
 
 // 1. Ensure .env exists
 if (!file_exists('.env')) {
@@ -52,14 +31,14 @@ $env = getAppEnv();
 // 3. Optional Local Install (required if vendor/ is missing)
 if ($shouldInstall) {
     runCommand('composer install', 'Installing Composer Dependencies locally');
-    runCommand('npm install', 'Installing NPM Dependencies locally');
+    // Only install front-end build assets when a package.json is present (the
+    // blade branch). The html (static) and backend-only branches have no build step.
+    if (file_exists(__DIR__.'/package.json')) {
+        runCommand('npm install', 'Installing NPM Dependencies locally');
+    }
 }
 
-// 3b. Apply the chosen frontend preset (must run before `sail up` so the
-//     correct docker-compose.override.yml is in place for the public mode).
-runCommand("php setup/apply-frontend.php --mode={$frontendMode}", "Applying '{$frontendMode}' frontend preset");
-
-// 4. Generate MySQL config (Docker volumes depend on this)
+// 3b. Generate MySQL config (Docker volumes depend on this)
 runCommand('php setup/generate-db-sql.php', 'Generating MySQL Config');
 
 // 5. Start Sail

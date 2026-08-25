@@ -17,10 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
 
-        // Guest/user redirect targets are baked in per frontend preset
-        // (config/frontend.php), copied into place at setup time. We read the
-        // file directly because the config repository is not bound yet here.
-        // There is intentionally NO runtime branching on the frontend mode.
+        // Guest/user redirect targets live in config/frontend.php, which is
+        // branch-specific (blade / html / backend-only). There is intentionally
+        // NO runtime branching on the frontend mode; the checked-out branch
+        // already supplies the correct values. We read the file directly
+        // because the config repository is not bound yet here.
         $redirects = require __DIR__.'/../config/frontend.php';
         $middleware->redirectTo(
             guests: $redirects['guest_redirect'] ?? '/login',
