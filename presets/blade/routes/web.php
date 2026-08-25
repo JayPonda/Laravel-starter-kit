@@ -1,0 +1,35 @@
+<?php
+
+use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\WebAuthController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', [HealthCheckController::class, 'index'])->name('health');
+
+Route::middleware('guest')->group(function () {
+    Route::get('login', [WebAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('login', [WebAuthController::class, 'login']);
+    Route::get('register', [WebAuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('register', [WebAuthController::class, 'register']);
+});
+
+Route::post('logout', [WebAuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $files = $user->files()->wherePivot('permission', 'owner')->latest()->take(5)->get();
+        return view('dashboard', compact('files'));
+    })->name('dashboard');
+
+    Route::get('/files', [\App\Http\Controllers\FileController::class, 'index'])->name('web.files.index');
+    Route::post('/files', [\App\Http\Controllers\FileController::class, 'store'])->name('web.files.store');
+    Route::get('/files/{file}', [\App\Http\Controllers\FileController::class, 'show'])->name('web.files.show');
+    Route::get('/files/{file}/edit', [\App\Http\Controllers\FileController::class, 'edit'])->name('web.files.edit');
+    Route::put('/files/{file}', [\App\Http\Controllers\FileController::class, 'update'])->name('web.files.update');
+    Route::post('/files/{file}/share', [\App\Http\Controllers\FileController::class, 'share'])->name('web.files.share');
+    Route::delete('/files/{file}/share/{user}', [\App\Http\Controllers\FileController::class, 'unshare'])->name('web.files.unshare');
+    Route::delete('/files/{file}', [\App\Http\Controllers\FileController::class, 'destroy'])->name('web.files.destroy');
+});

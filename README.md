@@ -7,6 +7,8 @@
 
 A high-performance, enterprise-ready Laravel template designed to bridge the gap between development and production. Pre-configured with **Laravel Sail**, **Redis**, **MinIO**, and a robust **Service-Layer Architecture**.
 
+> **Frontend modes:** This starter kit ships two interchangeable frontends — **Blade** (server-rendered Laravel views + session auth) and **Public** (standalone static HTML pages talking to the REST API). At setup you pick exactly one via `--frontend`, so the project never carries both. See [Frontend Mode](#frontend-mode) below.
+
 ---
 
 ## 🌟 Key Highlights
@@ -46,10 +48,14 @@ docker stop $(docker ps -q)
 # 3. Automated Run
 make run i=1
 
+# Choose the frontend rendering mode (default: blade)
+make run i=1 frontend=public
+
 # 4. Access
-# Standalone Frontend (API Verification): http://localhost:8081
-# Backend (Blade): http://localhost:12354
+# Blade mode   -> http://localhost:12354  (Laravel server-rendered views)
+# Public mode  -> http://localhost:18081  (standalone static HTML + API)
 ```
+
 </details>
 
 <details>
@@ -93,6 +99,29 @@ php artisan serve
 </details>
 
 ---
+
+## 🎨 Frontend Mode
+
+The kit never ships both frontends at once. During setup you choose one with the
+`--frontend` flag (or `frontend=` for `make run`). The default is **blade**.
+
+```bash
+php run.php -i --frontend=blade    # or: public
+make run i=1 frontend=public
+```
+
+| Mode | What you get | Access |
+| :--- | :--- | :--- |
+| `blade` (default) | Laravel server-rendered views, session auth, `routes/web.php` | Backend at `:12354` |
+| `public` | Standalone static HTML in `public/`, REST API auth (Sanctum) | Frontend at `:18081` |
+
+Internally, `setup/apply-frontend.php` copies the chosen preset from
+`presets/<mode>/` into the project and removes the other variant's files. Run it
+with `--dry-run` to preview changes without writing anything:
+
+```bash
+php setup/apply-frontend.php --mode=public --dry-run
+```
 
 ## 🛠 Development Workflow
 
@@ -141,9 +170,9 @@ app/
 
 Verify your setup using the standalone frontend to ensure API connectivity:
 
-1. **Standalone Check**: Visit `http://localhost:8081/index.html`. This page uses pure JavaScript to verify the Backend, Database, and Redis connections.
+1. **Standalone Check** (public mode): Visit `http://localhost:18081/index.html`. This page uses pure JavaScript to verify the Backend, Database, and Redis connections. In blade mode, use `http://localhost:12354/` instead.
 2. **API Endpoint**: `curl http://localhost:12354/api/` (should return `{"status":"up"}`).
-3. **Functional Test**: Use `http://localhost:8081/login.html` to test the full authentication flow via API.
+3. **Functional Test** (public mode): Use `http://localhost:18081/login.html` to test the full authentication flow via API.
 
 ---
 

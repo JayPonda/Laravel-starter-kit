@@ -1,0 +1,16 @@
+# Docker Compose override — applied only in "public" frontend mode.
+# Docker Compose automatically merges this file with docker-compose.yml,
+# adding the standalone HTML frontend container that serves ./public.
+services:
+    frontend:
+        container_name: laravel-starter-kit-frontend
+        image: 'nginx:alpine'
+        ports:
+            - '${FORWARD_FRONTEND_PORT:-18081}:80'
+        volumes:
+            - './public:/usr/share/nginx/html:ro'
+        networks:
+            - sail
+        depends_on:
+            backend:
+                condition: service_healthy

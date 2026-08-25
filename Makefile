@@ -20,8 +20,8 @@ fix: ## Adjust project permissions (usage: make fix E="path/to/dir")
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-run: ## Fully automate setup: Docker + Migrations + Tests. Use 'make run i=1' to include installations.
-	php run.php $(if $(i),-i)
+run: ## Fully automate setup: Docker + Migrations + Tests. Use 'make run i=1 frontend=public' to pick the frontend.
+	php run.php $(if $(i),-i) $(if $(frontend),--frontend=$(frontend))
 
 up: ## Start Sail containers
 	$(SAIL) up -d

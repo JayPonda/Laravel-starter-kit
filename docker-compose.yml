@@ -101,18 +101,6 @@ services:
                 - local
             retries: 3
             timeout: 5s
-    frontend:
-        container_name: laravel-starter-kit-frontend
-        image: 'nginx:alpine'
-        ports:
-            - '${FORWARD_FRONTEND_PORT:-18081}:80'
-        volumes:
-            - './public:/usr/share/nginx/html:ro'
-        networks:
-            - sail
-        depends_on:
-            backend:
-                condition: service_healthy
 networks:
     sail:
         driver: bridge
